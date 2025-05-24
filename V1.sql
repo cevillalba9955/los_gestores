@@ -1,6 +1,38 @@
+-- eliminar tablas
+DROP TABLE LOS_GESTORES.Cliente 
+DROP TABLE LOS_GESTORES.Pedido 
+DROP TABLE LOS_GESTORES.Detalle_Pedido 
+DROP TABLE LOS_GESTORES.Factura 
+DROP TABLE LOS_GESTORES.Detalle_Factura 
+DROP TABLE LOS_GESTORES.Sucursal 
+DROP TABLE LOS_GESTORES.Proveedor 
+DROP TABLE LOS_GESTORES.Compra 
+DROP TABLE LOS_GESTORES.Detalle_Compra 
+DROP TABLE LOS_GESTORES.Envio 
+DROP TABLE LOS_GESTORES.Sillon 
+DROP TABLE LOS_GESTORES.Sillon_Medida 
+DROP TABLE LOS_GESTORES.Sillon_Modelo 
+DROP TABLE LOS_GESTORES.Material 
+DROP TABLE LOS_GESTORES.Madera 
+DROP TABLE LOS_GESTORES.Tela 
+DROP TABLE LOS_GESTORES.Relleno 
+DROP TABLE LOS_GESTORES.Localidad 
+DROP TABLE LOS_GESTORES.Provincia 
+DROP TABLE LOS_GESTORES.LOS_GESTORES 
+GO 
+
+-- eliminar schema
+drop SCHEMA LOS_GESTORES
+go
+
+-- creacion de schema
+create schema LOS_GESTORES
+go
+
+
 -- Creacion de tablas
 
-CREATE TABLE Cliente (
+CREATE TABLE LOS_GESTORES.Cliente (
     cliente_id BIGINT IDENTITY(1, 1), -- cliente_dni + cliente_nombre + cliente_apellido
     cliente_dni BIGINT,
     cliente_localidad NVARCHAR(255),
@@ -13,7 +45,9 @@ CREATE TABLE Cliente (
 	PRIMARY KEY(cliente_id)
 );
 
-CREATE TABLE Pedido (
+
+
+CREATE TABLE LOS_GESTORES.Pedido (
 	pedido_numero DECIMAL(18, 0),
 	pedido_cliente_id BIGINT,
 	pedido_sucursal_nroSucursal BIGINT,
@@ -25,7 +59,7 @@ CREATE TABLE Pedido (
 	PRIMARY KEY(pedido_numero)
 );
 
-CREATE TABLE Detalle_Pedido (
+CREATE TABLE LOS_GESTORES.Detalle_Pedido (
 	detalle_pedido_id BIGINT IDENTITY(1, 1), -- detalle_pedido_numero + detalle_pedido_sillon_codigo
 	detalle_pedido_numero DECIMAL(18, 0),
 	detalle_pedido_sillon_codigo BIGINT,
@@ -34,7 +68,7 @@ CREATE TABLE Detalle_Pedido (
 	PRIMARY KEY(detalle_pedido_id)
 );
 
-CREATE TABLE Factura (
+CREATE TABLE LOS_GESTORES.Factura (
 	factura_numero BIGINT,
 	factura_cliente_id BIGINT,
 	factura_sucursal_nroSucursal BIGINT,
@@ -43,7 +77,7 @@ CREATE TABLE Factura (
 	PRIMARY KEY(factura_numero)
 );
 
-CREATE TABLE Detalle_Factura (
+CREATE TABLE LOS_GESTORES.Detalle_Factura (
 	detalle_factura_id BIGINT IDENTITY(1, 1), -- detalle_factura_numero + detalle_factura_pedido_id
 	detalle_factura_numero BIGINT,
 	detalle_factura_pedido_id BIGINT, 
@@ -52,7 +86,7 @@ CREATE TABLE Detalle_Factura (
 	PRIMARY KEY(detalle_factura_id)
 );
 
-CREATE TABLE Sucursal (
+CREATE TABLE LOS_GESTORES.Sucursal (
 	sucursal_nroSucursal BIGINT,
 	sucursal_localidad BIGINT,
 	sucursal_direccion NVARCHAR(255),
@@ -61,7 +95,7 @@ CREATE TABLE Sucursal (
 	PRIMARY KEY(sucursal_nroSucursal)
 );
 
-CREATE TABLE Proveedor (
+CREATE TABLE LOS_GESTORES.Proveedor (
 	proveedor_id BIGINT IDENTITY(1, 1), -- proveedor_cuit + ...
 	proveedor_cuit NVARCHAR(255),
 	proveedor_localidad BIGINT,
@@ -72,7 +106,7 @@ CREATE TABLE Proveedor (
 	PRIMARY KEY(proveedor_id)
 );
 
-CREATE TABLE Compra (
+CREATE TABLE LOS_GESTORES.Compra (
 	compra_numero DECIMAL(18, 0),
 	compra_proveedor_id BIGINT, 
 	compra_sucursal_nroSucursal BIGINT,
@@ -81,7 +115,7 @@ CREATE TABLE Compra (
 	PRIMARY KEY(compra_numero)
 );
 
-CREATE TABLE Detalle_Compra (
+CREATE TABLE LOS_GESTORES.Detalle_Compra (
 	detalle_compra_id BIGINT IDENTITY(1, 1), -- detalle_compra_numero + detalle_compra_material_id
 	detalle_compra_numero DECIMAL(18, 0),
 	detalle_compra_material_id BIGINT,
@@ -90,7 +124,7 @@ CREATE TABLE Detalle_Compra (
 	PRIMARY KEY(detalle_compra_id)
 );
 
-CREATE TABLE Envio (
+CREATE TABLE LOS_GESTORES.Envio (
 	envio_numero DECIMAL(18, 0),
 	envio_factura_numero BIGINT,
 	envio_fecha_programada DATETIME2(6),
@@ -100,7 +134,7 @@ CREATE TABLE Envio (
 	PRIMARY KEY(envio_numero)
 );
 
-CREATE TABLE Sillon (
+CREATE TABLE LOS_GESTORES.Sillon (
 	sillon_codigo BIGINT,
 	sillon_modelo_codigo BIGINT, 
 	sillon_medida_id BIGINT, 
@@ -108,7 +142,7 @@ CREATE TABLE Sillon (
 	PRIMARY KEY(sillon_codigo)
 );
 
-CREATE TABLE Sillon_Medida (
+CREATE TABLE LOS_GESTORES.Sillon_Medida (
 	sillon_medida_id BIGINT IDENTITY(1, 1), -- sillon_medida_alto + sillon_medida_ancho + sillon_medida_profundidad
 	sillon_medida_alto DECIMAL(18, 2),
 	sillon_medida_ancho DECIMAL(18, 2),
@@ -117,7 +151,7 @@ CREATE TABLE Sillon_Medida (
 	PRIMARY KEY(sillon_medida_id)
 );
 
-CREATE TABLE Sillon_Modelo (
+CREATE TABLE LOS_GESTORES.Sillon_Modelo (
 	sillon_modelo_codigo BIGINT, 
 	sillon_modelo NVARCHAR(255),
 	sillon_modelo_descripcion NVARCHAR(255),
@@ -125,7 +159,7 @@ CREATE TABLE Sillon_Modelo (
 	PRIMARY KEY(sillon_modelo_codigo)
 );
 
-CREATE TABLE Material (
+CREATE TABLE LOS_GESTORES.Material (
 	material_id  BIGINT IDENTITY(1, 1), -- material_tipo + material_nombre
 	material_tipo NVARCHAR(255),
 	material_nombre NVARCHAR(255),
@@ -136,33 +170,33 @@ CREATE TABLE Material (
 	PRIMARY KEY(material_id)
 );
 
-CREATE TABLE Madera (
+CREATE TABLE LOS_GESTORES.Madera (
 	madera_id BIGINT IDENTITY(1, 1), -- madera_color + madera_dureza
 	madera_color NVARCHAR(255),
 	madera_dureza NVARCHAR(255),
 	PRIMARY KEY(madera_id)
 );
 
-CREATE TABLE Tela (
+CREATE TABLE LOS_GESTORES.Tela (
 	tela_id BIGINT IDENTITY(1, 1), -- tela_color + tela_textura
 	tela_color NVARCHAR(255),
 	tela_textura NVARCHAR(255),
 	PRIMARY KEY(tela_id)
 );
 
-CREATE TABLE Relleno (
+CREATE TABLE LOS_GESTORES.Relleno (
 	relleno_densidad DECIMAL(38, 2),
 	PRIMARY KEY(relleno_densidad)
 );
 
-CREATE TABLE Localidad (
+CREATE TABLE LOS_GESTORES.Localidad (
 	localidad_id BIGINT IDENTITY(1, 1),
 	localidad_descripcion NVARCHAR(255),
 	localidad_provincia BIGINT,
 	PRIMARY KEY(localidad_id)
 );
 
-CREATE TABLE Provincia (
+CREATE TABLE LOS_GESTORES.Provincia (
 	provincia_id BIGINT IDENTITY(1, 1),
 	provincia_descripcion NVARCHAR(255),
 	PRIMARY KEY(provincia_id)
@@ -241,7 +275,7 @@ ADD FOREIGN KEY(localidad_provincia) REFERENCES Provincia(provincia_id)
 
 -- Tabla LOS_GESTORES
 
-CREATE TABLE LOS_GESTORES (
+CREATE TABLE LOS_GESTORES.LOS_GESTORES (
     grupo_nombre NVARCHAR(255),
     numero_grupo BIGINT,
     curso NVARCHAR(255),
