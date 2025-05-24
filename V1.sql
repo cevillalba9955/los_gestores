@@ -1,4 +1,5 @@
--- eliminar tablas
+-- Eliminar tablas
+
 DROP TABLE LOS_GESTORES.Cliente 
 DROP TABLE LOS_GESTORES.Pedido 
 DROP TABLE LOS_GESTORES.Detalle_Pedido 
@@ -21,14 +22,15 @@ DROP TABLE LOS_GESTORES.Provincia
 DROP TABLE LOS_GESTORES.LOS_GESTORES 
 GO 
 
--- eliminar schema
+-- Eliminar schema
+
 drop SCHEMA LOS_GESTORES
 go
 
--- creacion de schema
+-- Creacion de schema
+
 create schema LOS_GESTORES
 go
-
 
 -- Creacion de tablas
 
@@ -44,8 +46,6 @@ CREATE TABLE LOS_GESTORES.Cliente (
     cliente_telefono NVARCHAR(255),
 	PRIMARY KEY(cliente_id)
 );
-
-
 
 CREATE TABLE LOS_GESTORES.Pedido (
 	pedido_numero DECIMAL(18, 0),
@@ -204,73 +204,73 @@ CREATE TABLE LOS_GESTORES.Provincia (
 
 -- Implementacion de las FK
 
-ALTER TABLE Cliente
+ALTER TABLE LOS_GESTORES.Cliente
 ADD FOREIGN KEY(cliente_localidad) REFERENCES Localidad(localidad_id)
 
-ALTER TABLE Pedido
+ALTER TABLE LOS_GESTORES.Pedido
 ADD FOREIGN KEY(pedido_cliente_id) REFERENCES Cliente(cliente_id)
 
-ALTER TABLE Pedido
+ALTER TABLE LOS_GESTORES.Pedido
 ADD FOREIGN KEY(pedido_sucursal_nroSucursal) REFERENCES Sucursal(sucursal_nroSucursal)
 
-ALTER TABLE Detalle_Pedido
+ALTER TABLE LOS_GESTORES.Detalle_Pedido
 ADD FOREIGN KEY(detalle_pedido_numero) REFERENCES Pedido(pedido_numero)
 
-ALTER TABLE Detalle_Pedido
+ALTER TABLE LOS_GESTORES.Detalle_Pedido
 ADD FOREIGN KEY(detalle_pedido_sillon_codigo) REFERENCES Sillon(sillon_codigo)
 
-ALTER TABLE Factura
+ALTER TABLE LOS_GESTORES.Factura
 ADD FOREIGN KEY(factura_cliente_id) REFERENCES Cliente(cliente_id)
 
-ALTER TABLE Factura
+ALTER TABLE LOS_GESTORES.Factura
 ADD FOREIGN KEY(factura_sucursal_nroSucursal) REFERENCES Sucursal(sucursal_nroSucursal)
 
-ALTER TABLE Detalle_Factura
+ALTER TABLE LOS_GESTORES.Detalle_Factura
 ADD FOREIGN KEY(detalle_factura_numero) REFERENCES Factura(factura_numero)
 
-ALTER TABLE Detalle_Factura
+ALTER TABLE LOS_GESTORES.Detalle_Factura
 ADD FOREIGN KEY(detalle_factura_pedido_id) REFERENCES Detalle_Pedido(detalle_pedido_id)
 
-ALTER TABLE Sucursal
+ALTER TABLE LOS_GESTORES.Sucursal
 ADD FOREIGN KEY(sucursal_localidad) REFERENCES Localidad(localidad_id)
 
-ALTER TABLE Proveedor
+ALTER TABLE LOS_GESTORES.Proveedor
 ADD FOREIGN KEY(proveedor_localidad) REFERENCES Localidad(localidad_id)
 
-ALTER TABLE Compra
+ALTER TABLE LOS_GESTORES.Compra
 ADD FOREIGN KEY(compra_proveedor_id) REFERENCES Proveedor(proveedor_id)
 
-ALTER TABLE Compra
+ALTER TABLE LOS_GESTORES.Compra
 ADD FOREIGN KEY(compra_sucursal_nroSucursal) REFERENCES Sucursal(sucursal_nroSucursal)
 
-ALTER TABLE Detalle_Compra
+ALTER TABLE LOS_GESTORES.Detalle_Compra
 ADD FOREIGN KEY(detalle_compra_numero) REFERENCES Compra(compra_numero)
 
-ALTER TABLE Detalle_Compra
+ALTER TABLE LOS_GESTORES.Detalle_Compra
 ADD FOREIGN KEY(detalle_compra_material_id) REFERENCES Material(material_id)
 
-ALTER TABLE Envio
+ALTER TABLE LOS_GESTORES.Envio
 ADD FOREIGN KEY(envio_factura_numero) REFERENCES Factura(factura_numero)
 
-ALTER TABLE Sillon
+ALTER TABLE LOS_GESTORES.Sillon
 ADD FOREIGN KEY(sillon_modelo_codigo) REFERENCES Sillon_Modelo(sillon_modelo_codigo)
 
-ALTER TABLE Sillon
+ALTER TABLE LOS_GESTORES.Sillon
 ADD FOREIGN KEY(sillon_medida_id) REFERENCES Sillon_Medida(sillon_medida_id)
 
-ALTER TABLE Sillon
+ALTER TABLE LOS_GESTORES.Sillon
 ADD FOREIGN KEY(sillon_material_id) REFERENCES Material(material_id)
 
-ALTER TABLE Material
+ALTER TABLE LOS_GESTORES.Material
 ADD FOREIGN KEY(material_tela_id) REFERENCES Tela(tela_id)
 
-ALTER TABLE Material
+ALTER TABLE LOS_GESTORES.Material
 ADD FOREIGN KEY(material_madera_id) REFERENCES Madera(madera_id)
 
-ALTER TABLE Material
+ALTER TABLE LOS_GESTORES.Material
 ADD FOREIGN KEY(material_relleno_densidad) REFERENCES Relleno(relleno_densidad)
 
-ALTER TABLE Localidad
+ALTER TABLE LOS_GESTORES.Localidad
 ADD FOREIGN KEY(localidad_provincia) REFERENCES Provincia(provincia_id)
 
 -- Tabla LOS_GESTORES
