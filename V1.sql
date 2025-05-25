@@ -87,7 +87,7 @@ CREATE TABLE LOS_GESTORES.Detalle_Factura (
 );
 
 CREATE TABLE LOS_GESTORES.Sucursal (
-	sucursal_nroSucursal BIGINT,
+	sucursal_nroSucursal BIGINT IDENTITY(1, 1),
 	sucursal_localidad BIGINT,
 	sucursal_direccion NVARCHAR(255),
 	sucursal_telefono NVARCHAR(255),
@@ -201,6 +201,16 @@ CREATE TABLE LOS_GESTORES.Provincia (
 	provincia_descripcion NVARCHAR(255),
 	PRIMARY KEY(provincia_id)
 );
+
+-- implementacion  constraint 
+ALTER TABLE LOS_GESTORES.PROVINCIA
+ADD CONSTRAINT UQ_Provincia_Descripcion UNIQUE (provincia_descripcion);
+
+ALTER TABLE LOS_GESTORES.LOCALIDAD
+ADD CONSTRAINT UQ_Localidad_Provincia UNIQUE (localidad_descripcion, localidad_provincia);
+
+ALTER TABLE LOS_GESTORES.Proveedor
+ADD CONSTRAINT UQ_Proveedor_CUIT UNIQUE (proveedor_cuit);
 
 -- Implementacion de las FK
 
