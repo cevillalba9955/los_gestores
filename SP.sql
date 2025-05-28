@@ -151,3 +151,137 @@ BEGIN
 END;
 GO
 
+CREATE PROCEDURE LOS_GESTORES.SP_PEDIDO
+AS
+BEGIN
+	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_PEDIDO
+AS
+BEGIN
+	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_FACTURA
+AS
+BEGIN
+	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_FACTURA
+AS
+BEGIN
+	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_COMPRA
+AS
+BEGIN
+	SET NOCOUNT ON;
+	INSERT INTO LOS_GESTORES.Compra (
+		compra_numero,
+		compra_proveedor_id, 
+		compra_sucursal_nroSucursal,
+		compra_fecha,
+		compra_total,
+	)
+	SELECT DISTINCT
+		m.Compra_Numero,
+		pr.proveedor_id,
+		s.sucursal_nroSucursal,
+		m.Compra_Fecha,
+		m.Compra_Total
+	FROM gd_esquema.Maestra m
+	JOIN LOS_GESTORES.Proveedor pr ON pr.proveedor_cuit = m.Proveedor_Cuit
+	JOIN LOS_GESTORES.Provincia p ON p.provincia_descripcion = m.Sucursal_Provincia
+	JOIN LOS_GESTORES.Localidad l ON l.localidad_descripcion = m.Sucursal_Localidad
+		AND l.localidad_provincia = p.provincia_id
+	JOIN LOS_GESTORES.Sucursal s ON s.sucursal_direccion = m.Sucursal_Direccion
+		AND s.sucursal_localidad = l.localidad_id
+	WHERE m.Compra_Numero IS NOT NULL
+		AND m.Proveedor_Cuit IS NOT NULL
+		AND m.Sucursal_Direccion IS NOT NULL
+		AND NOT EXISTS (
+			SELECT 1
+			FROM LOS_GESTORES.Compra c
+			WHERE c.compra_numero = m.Compra_Numero
+		);
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_COMPRA
+AS
+BEGIN
+	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_ENVIO
+AS
+BEGIN
+	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_SILLON
+AS
+BEGIN
+	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_SILLON_MEDIDA
+AS
+BEGIN
+	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_SILLON_MODELO
+AS
+BEGIN
+	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_MATERIAL
+AS
+BEGIN
+	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_MADERA
+AS
+BEGIN
+	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_TELA
+AS
+BEGIN
+	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_RELLENO
+AS
+BEGIN
+	SET NOCOUNT ON;
+	INSERT INTO LOS_GESTORES.Relleno (relleno_densidad)
+	SELECT DISTINCT Relleno_Densidad
+	FROM gd_esquema.Maestra
+	WHERE Relleno_Densidad IS NOT NULL
+		AND NOT EXISTS (
+			SELECT 1
+			FROM LOS_GESTORES.Relleno r
+			WHERE r.relleno_densidad = Maestra.Relleno_Densidad
+		);
+END;
+GO
