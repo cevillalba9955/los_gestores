@@ -6,7 +6,7 @@ go
 CREATE TABLE LOS_GESTORES.Cliente (
     cliente_id BIGINT IDENTITY(1, 1), -- cliente_dni + cliente_nombre + cliente_apellido
     cliente_dni BIGINT,
-    cliente_localidad NVARCHAR(255),
+    cliente_localidad BIGINT,
     cliente_nombre NVARCHAR(255),
     cliente_apellido NVARCHAR(255),
     cliente_fechaNacimiento DATETIME2(6),

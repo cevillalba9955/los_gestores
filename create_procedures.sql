@@ -4,14 +4,12 @@ AS
 BEGIN
    -- SET NOCOUNT ON;
     INSERT INTO LOS_GESTORES.PROVINCIA (provincia_descripcion)
-    SELECT DISTINCT Proveedor_Provincia
-    FROM gd_esquema.MAESTRA
-    WHERE Proveedor_Provincia IS NOT NULL
-      AND NOT EXISTS (
-          SELECT 1 
-          FROM LOS_GESTORES.PROVINCIA p
-          WHERE p.provincia_descripcion = MAESTRA.Proveedor_Provincia
-      );
+    SELECT DISTINCT Proveedor_Provincia    FROM gd_esquema.MAESTRA    WHERE Proveedor_Provincia IS NOT NULL
+	union
+    SELECT DISTINCT Cliente_Provincia    FROM gd_esquema.MAESTRA    WHERE Cliente_Provincia IS NOT NULL
+	union
+    SELECT DISTINCT Sucursal_Provincia    FROM gd_esquema.MAESTRA    WHERE Sucursal_Provincia IS NOT NULL
+    ;
 END;
 GO
 
@@ -21,18 +19,17 @@ BEGIN
    -- SET NOCOUNT ON;
 
     INSERT INTO LOS_GESTORES.LOCALIDAD (localidad_descripcion, localidad_provincia)
-    SELECT DISTINCT
-        m.Proveedor_Localidad,
-        p.provincia_id
-    FROM gd_esquema.MAESTRA m
-    JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.Proveedor_Provincia
-    WHERE m.Proveedor_Localidad IS NOT NULL
-      AND NOT EXISTS (
-          SELECT 1
-          FROM LOS_GESTORES.LOCALIDAD l
-          WHERE l.localidad_descripcion = m.Proveedor_Localidad
-            AND l.localidad_provincia = p.provincia_id
-      );
+        SELECT DISTINCT CLIENTE_LOCALIDAD,p.provincia_id FROM gd_esquema.Maestra m
+        JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.cliente_Provincia
+        where CLIENTE_LOCALIDAD is not null
+        UNION
+        SELECT DISTINCT Proveedor_Localidad,p.provincia_id FROM gd_esquema.Maestra m
+        JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.Proveedor_Provincia
+        where Proveedor_Localidad is not null
+        UNION
+        SELECT DISTINCT Sucursal_Localidad,p.provincia_id FROM gd_esquema.Maestra m
+        JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.Sucursal_Provincia
+        where Sucursal_Localidad is not null;
 END;
 GO
 
