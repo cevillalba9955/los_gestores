@@ -226,6 +226,34 @@ BEGIN
 		);
 END;
 GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_SILLON_MODELO
+AS
+BEGIN
+--	SET NOCOUNT ON;
+
+INSERT INTO LOS_GESTORES.Sillon_Modelo
+           (sillon_modelo_codigo
+           ,sillon_modelo
+           ,sillon_modelo_descripcion
+           ,sillon_modelo_precio)
+    SELECT 
+         Sillon_Modelo_Codigo
+        ,Sillon_Modelo
+        ,Sillon_Modelo_Descripcion
+        ,Sillon_Modelo_Precio
+
+    FROM gd_esquema.Maestra
+    GROUP BY 
+         Sillon_Modelo_Codigo
+        ,Sillon_Modelo
+        ,Sillon_Modelo_Descripcion
+        ,Sillon_Modelo_Precio
+        HAVING Sillon_Modelo_Codigo IS NOT NULL
+END;
+GO
+
+
 /*
 CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_COMPRA
 AS
@@ -249,12 +277,7 @@ END;
 GO
 
 
-CREATE PROCEDURE LOS_GESTORES.SP_SILLON_MODELO
-AS
-BEGIN
---	SET NOCOUNT ON;
-END;
-GO
+
 
 CREATE PROCEDURE LOS_GESTORES.SP_MATERIAL
 AS
