@@ -136,6 +136,31 @@ BEGIN
 END;
 GO
 
+CREATE PROCEDURE LOS_GESTORES.SP_SILLON_MEDIDA
+AS
+BEGIN
+    --	SET NOCOUNT ON;
+
+    INSERT INTO LOS_GESTORES.Sillon_Medida (
+                sillon_medida_alto
+            ,sillon_medida_ancho
+            ,sillon_medida_profundidad
+            ,sillon_medida_precio
+            )
+        SELECT Sillon_Medida_Alto
+            ,Sillon_Medida_Ancho
+            ,Sillon_Medida_Profundidad
+            ,Sillon_Medida_Precio
+        FROM gd_esquema.Maestra
+        GROUP BY Sillon_Medida_Alto
+            ,Sillon_Medida_Ancho
+            ,Sillon_Medida_Profundidad
+            ,Sillon_Medida_Precio
+            HAVING Sillon_Medida_Alto IS NOT NULL 
+END;
+GO
+
+
 
 /*
 CREATE PROCEDURE LOS_GESTORES.SP_PEDIDO
@@ -223,12 +248,6 @@ BEGIN
 END;
 GO
 
-CREATE PROCEDURE LOS_GESTORES.SP_SILLON_MEDIDA
-AS
-BEGIN
---	SET NOCOUNT ON;
-END;
-GO
 
 CREATE PROCEDURE LOS_GESTORES.SP_SILLON_MODELO
 AS
