@@ -19,7 +19,7 @@ CREATE TABLE LOS_GESTORES.Localidad (
 );
 
 CREATE TABLE LOS_GESTORES.Sucursal (
-	sucursal_nroSucursal BIGINT IDENTITY(1, 1),
+	sucursal_nroSucursal BIGINT,
 	sucursal_localidad BIGINT,
 	sucursal_direccion NVARCHAR(255),
 	sucursal_telefono NVARCHAR(255),
@@ -27,15 +27,13 @@ CREATE TABLE LOS_GESTORES.Sucursal (
 	CONSTRAINT PK_SUCURSAL PRIMARY KEY(sucursal_nroSucursal)
 );
 
-
-
-
 CREATE TABLE LOS_GESTORES.Madera (
 	madera_id BIGINT IDENTITY(1, 1), -- madera_color + madera_dureza
 	madera_nombre NVARCHAR(255),
 	madera_descripcion NVARCHAR(255),
 	madera_color NVARCHAR(255),
 	madera_dureza NVARCHAR(255),
+	madera_precio DECIMAL(38,2),
 	CONSTRAINT PK_MADERA PRIMARY KEY(madera_id)
 );
 
@@ -45,6 +43,7 @@ CREATE TABLE LOS_GESTORES.Tela (
 	tela_descripcion NVARCHAR(255),
 	tela_color NVARCHAR(255),
 	tela_textura NVARCHAR(255),
+	tela_precio DECIMAL(38,2),
 	CONSTRAINT PK_TELA PRIMARY KEY(tela_id)
 );
 
@@ -53,6 +52,7 @@ CREATE TABLE LOS_GESTORES.Relleno (
 	relleno_nombre NVARCHAR(255),
 	relleno_descripcion NVARCHAR(255),
 	relleno_densidad DECIMAL(38, 2),
+	relleno_precio DECIMAL(38,2),
 	CONSTRAINT PK_RELLENO PRIMARY KEY(relleno_id)
 );
 
@@ -94,6 +94,38 @@ CREATE TABLE LOS_GESTORES.Sillon (
 	sillon_tela BIGINT, 
 	sillon_relleno BIGINT, 
 	CONSTRAINT PK_SILLON PRIMARY KEY(sillon_codigo)
+);
+
+
+/************* compras ********************/
+
+CREATE TABLE LOS_GESTORES.Proveedor (
+	proveedor_id BIGINT IDENTITY(1, 1), -- proveedor_cuit + ...
+	proveedor_cuit NVARCHAR(255),
+	proveedor_localidad BIGINT,
+	proveedor_razonSocial NVARCHAR(255),
+	proveedor_direccion NVARCHAR(255),
+	proveedor_telefono NVARCHAR(255),
+	proveedor_mail NVARCHAR(255),
+	CONSTRAINT PK_PROVEEDOR PRIMARY KEY(proveedor_id)
+);
+
+CREATE TABLE LOS_GESTORES.Compra (
+	compra_numero DECIMAL(18, 0),
+	compra_proveedor BIGINT, 
+	compra_sucursal BIGINT,
+	compra_fecha DATETIME2(6),
+	compra_total DECIMAL(18, 2),
+	CONSTRAINT PK_COMPRA PRIMARY KEY(compra_numero)
+);
+
+CREATE TABLE LOS_GESTORES.Detalle_Compra (
+	detalle_compra_id BIGINT IDENTITY(1, 1), -- detalle_compra_numero + detalle_compra_material_id
+	detalle_compra_numero DECIMAL(18, 0),
+	detalle_compra_material_id BIGINT,
+	detalle_compra_precio DECIMAL(18, 2),
+	detalle_compra_cantidad DECIMAL(18, 0),
+	CONSTRAINT PK_DETALLE_COMPRA PRIMARY KEY(detalle_compra_id)
 );
 
 
@@ -172,37 +204,6 @@ CREATE TABLE LOS_GESTORES.Envio (
 
 
 
-/************* compras ********************/
-
-CREATE TABLE LOS_GESTORES.Proveedor (
-	proveedor_id BIGINT IDENTITY(1, 1), -- proveedor_cuit + ...
-	proveedor_cuit NVARCHAR(255),
-	proveedor_localidad BIGINT,
-	proveedor_razonSocial NVARCHAR(255),
-	proveedor_direccion NVARCHAR(255),
-	proveedor_telefono NVARCHAR(255),
-	proveedor_mail NVARCHAR(255),
-	CONSTRAINT PK_PROVEEDOR PRIMARY KEY(proveedor_id)
-);
-
-CREATE TABLE LOS_GESTORES.Compra (
-	compra_numero DECIMAL(18, 0),
-	compra_proveedor_id BIGINT, 
-	compra_sucursal_nroSucursal BIGINT,
-	compra_fecha DATETIME2(6),
-	compra_total DECIMAL(18, 2),
-	CONSTRAINT PK_COMPRA PRIMARY KEY(compra_numero)
-);
-
-CREATE TABLE LOS_GESTORES.Detalle_Compra (
-	detalle_compra_id BIGINT IDENTITY(1, 1), -- detalle_compra_numero + detalle_compra_material_id
-	detalle_compra_numero DECIMAL(18, 0),
-	detalle_compra_material_id BIGINT,
-	detalle_compra_precio DECIMAL(18, 2),
-	detalle_compra_cantidad DECIMAL(18, 0),
-	CONSTRAINT PK_DETALLE_COMPRA PRIMARY KEY(detalle_compra_id)
-);
-
 
 
 
@@ -264,20 +265,22 @@ ADD CONSTRAINT FK_PROVEEDOR_LOCALIDAD FOREIGN KEY(proveedor_localidad)
 REFERENCES LOS_GESTORES.Localidad(localidad_id)
 
 ALTER TABLE LOS_GESTORES.Compra
-ADD CONSTRAINT FK_COMPRA_PROVEEDOR FOREIGN KEY(compra_proveedor_id) 
+ADD CONSTRAINT FK_COMPRA_PROVEEDOR FOREIGN KEY(compra_proveedor) 
 REFERENCES LOS_GESTORES.Proveedor(proveedor_id)
 
 ALTER TABLE LOS_GESTORES.Compra
-ADD CONSTRAINT FK_COMPRA_SUCURSAL FOREIGN KEY(compra_sucursal_nroSucursal) 
+ADD CONSTRAINT FK_COMPRA_SUCURSAL FOREIGN KEY(compra_sucursal) 
 REFERENCES LOS_GESTORES.Sucursal(sucursal_nroSucursal)
 
 ALTER TABLE LOS_GESTORES.Detalle_Compra
 ADD CONSTRAINT FK_DETALLE_COMPRA FOREIGN KEY(detalle_compra_numero) 
 REFERENCES LOS_GESTORES.Compra(compra_numero)
 
+/*
 ALTER TABLE LOS_GESTORES.Detalle_Compra
 ADD CONSTRAINT FK_DETALLE_COMPRA_MATERIAL FOREIGN KEY(detalle_compra_material_id) 
 REFERENCES LOS_GESTORES.Material(material_id)
+*/
 
 ALTER TABLE LOS_GESTORES.Envio
 ADD CONSTRAINT FK_ENVIO_FACTURA FOREIGN KEY(envio_factura_numero) 
@@ -313,7 +316,7 @@ ADD CONSTRAINT FK_LOCALIDAD_PROVINCIA FOREIGN KEY(localidad_provincia)
 REFERENCES LOS_GESTORES.Provincia(provincia_id)
 
 -- Tabla LOS_GESTORES
-
+/*
 CREATE TABLE LOS_GESTORES.LOS_GESTORES (
     grupo_nombre NVARCHAR(255),
     numero_grupo BIGINT,
@@ -337,6 +340,5 @@ INSERT INTO LOS_GESTORES VALUES (
     'Agustina Denise Righetti', 1762321,
     'Andrea Denise Villanueva', 1500569
 );
-
--- Migracion de datos de la tabla maestra
+*/
 
