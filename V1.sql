@@ -13,7 +13,6 @@ DROP TABLE LOS_GESTORES.Envio
 DROP TABLE LOS_GESTORES.Sillon 
 DROP TABLE LOS_GESTORES.Sillon_Medida 
 DROP TABLE LOS_GESTORES.Sillon_Modelo 
-DROP TABLE LOS_GESTORES.Material 
 DROP TABLE LOS_GESTORES.Madera 
 DROP TABLE LOS_GESTORES.Tela 
 DROP TABLE LOS_GESTORES.Relleno 
@@ -118,7 +117,7 @@ CREATE TABLE LOS_GESTORES.Compra (
 CREATE TABLE LOS_GESTORES.Detalle_Compra (
 	detalle_compra_id BIGINT IDENTITY(1, 1), -- detalle_compra_numero + detalle_compra_material_id
 	detalle_compra_numero DECIMAL(18, 0),
-	detalle_compra_material_id BIGINT,
+	detalle_compra_material_tipo BIGINT,
 	detalle_compra_precio DECIMAL(18, 2),
 	detalle_compra_cantidad DECIMAL(18, 0),
 	PRIMARY KEY(detalle_compra_id)
@@ -138,7 +137,9 @@ CREATE TABLE LOS_GESTORES.Sillon (
 	sillon_codigo BIGINT,
 	sillon_modelo_codigo BIGINT, 
 	sillon_medida_id BIGINT, 
-	sillon_material_id BIGINT, 
+	sillon_madera_id BIGINT, 
+	sillon_tela_id BIGINT, 
+	sillon_relleno_id BIGINT, 
 	PRIMARY KEY(sillon_codigo)
 );
 
@@ -159,6 +160,7 @@ CREATE TABLE LOS_GESTORES.Sillon_Modelo (
 	PRIMARY KEY(sillon_modelo_codigo)
 );
 
+/*
 CREATE TABLE LOS_GESTORES.Material (
 	material_id  BIGINT IDENTITY(1, 1), -- material_tipo + material_nombre
 	material_tipo NVARCHAR(255),
@@ -169,11 +171,15 @@ CREATE TABLE LOS_GESTORES.Material (
 	material_relleno_densidad DECIMAL(38, 2),
 	PRIMARY KEY(material_id)
 );
+*/
 
 CREATE TABLE LOS_GESTORES.Madera (
 	madera_id BIGINT IDENTITY(1, 1), -- madera_color + madera_dureza
 	madera_color NVARCHAR(255),
 	madera_dureza NVARCHAR(255),
+	madera_nombre NVARCHAR(255),
+	madera_precio DECIMAL(38, 2),
+	madera_descripcion NVARCHAR(255),
 	PRIMARY KEY(madera_id)
 );
 
@@ -181,12 +187,19 @@ CREATE TABLE LOS_GESTORES.Tela (
 	tela_id BIGINT IDENTITY(1, 1), -- tela_color + tela_textura
 	tela_color NVARCHAR(255),
 	tela_textura NVARCHAR(255),
+	tela_nombre NVARCHAR(255),
+	tela_precio DECIMAL(38, 2),
+	tela_descripcion NVARCHAR(255),
 	PRIMARY KEY(tela_id)
 );
 
 CREATE TABLE LOS_GESTORES.Relleno (
+	relleno_id BIGINT IDENTITY(1, 1),
 	relleno_densidad DECIMAL(38, 2),
-	PRIMARY KEY(relleno_densidad)
+	relleno_nombre NVARCHAR(255),
+	relleno_precio DECIMAL(38, 2),
+	relleno_descripcion NVARCHAR(255),
+	PRIMARY KEY(relleno_id)
 );
 
 CREATE TABLE LOS_GESTORES.Localidad (
@@ -202,7 +215,8 @@ CREATE TABLE LOS_GESTORES.Provincia (
 	PRIMARY KEY(provincia_id)
 );
 
--- implementacion  constraint 
+-- Implementacion  constraint 
+
 ALTER TABLE LOS_GESTORES.PROVINCIA
 ADD CONSTRAINT UQ_Provincia_Descripcion UNIQUE (provincia_descripcion);
 
@@ -311,3 +325,4 @@ INSERT INTO LOS_GESTORES VALUES (
 
 -- Migracion de datos de la tabla maestra
 
+select * from gd_esquema.Maestra
