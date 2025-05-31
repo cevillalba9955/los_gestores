@@ -4,11 +4,17 @@ AS
 BEGIN
    -- SET NOCOUNT ON;
     INSERT INTO LOS_GESTORES.PROVINCIA (provincia_descripcion)
-    SELECT DISTINCT Proveedor_Provincia    FROM gd_esquema.MAESTRA    WHERE Proveedor_Provincia IS NOT NULL
+    SELECT DISTINCT Proveedor_Provincia 
+		FROM gd_esquema.MAESTRA    
+		WHERE Proveedor_Provincia IS NOT NULL
 	union
-    SELECT DISTINCT Cliente_Provincia    FROM gd_esquema.MAESTRA    WHERE Cliente_Provincia IS NOT NULL
+    SELECT DISTINCT Cliente_Provincia 
+		FROM gd_esquema.MAESTRA    
+		WHERE Cliente_Provincia IS NOT NULL
 	union
-    SELECT DISTINCT Sucursal_Provincia    FROM gd_esquema.MAESTRA    WHERE Sucursal_Provincia IS NOT NULL
+    SELECT DISTINCT Sucursal_Provincia 
+		FROM gd_esquema.MAESTRA    
+		WHERE Sucursal_Provincia IS NOT NULL
     ;
 END;
 GO
@@ -19,19 +25,56 @@ BEGIN
    -- SET NOCOUNT ON;
 
     INSERT INTO LOS_GESTORES.LOCALIDAD (localidad_descripcion, localidad_provincia)
-        SELECT DISTINCT CLIENTE_LOCALIDAD,p.provincia_id FROM gd_esquema.Maestra m
-        JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.cliente_Provincia
-        where CLIENTE_LOCALIDAD is not null
+        SELECT DISTINCT CLIENTE_LOCALIDAD,p.provincia_id 
+			FROM gd_esquema.Maestra m
+			JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.cliente_Provincia
+			where CLIENTE_LOCALIDAD is not null
         UNION
-        SELECT DISTINCT Proveedor_Localidad,p.provincia_id FROM gd_esquema.Maestra m
-        JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.Proveedor_Provincia
-        where Proveedor_Localidad is not null
+        SELECT DISTINCT Proveedor_Localidad,p.provincia_id 
+			FROM gd_esquema.Maestra m
+			JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.Proveedor_Provincia
+			where Proveedor_Localidad is not null
         UNION
-        SELECT DISTINCT Sucursal_Localidad,p.provincia_id FROM gd_esquema.Maestra m
-        JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.Sucursal_Provincia
-        where Sucursal_Localidad is not null;
+			SELECT DISTINCT Sucursal_Localidad,p.provincia_id 
+			FROM gd_esquema.Maestra m
+			JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.Sucursal_Provincia
+			where Sucursal_Localidad is not null;
 END;
 GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_SUCURSAL
+AS
+BEGIN
+   -- SET NOCOUNT ON;
+
+    INSERT INTO LOS_GESTORES.SUCURSAL (
+		sucursal_nroSucursal,
+        sucursal_direccion,
+        sucursal_localidad,
+        sucursal_telefono,
+        sucursal_mail
+    )
+    SELECT DISTINCT
+		m.Sucursal_NroSucursal,
+        m.Sucursal_Direccion,
+        l.localidad_id,
+        m.Sucursal_Telefono,
+        m.Sucursal_Mail
+    FROM gd_esquema.MAESTRA m
+    JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.Sucursal_Provincia
+    JOIN LOS_GESTORES.LOCALIDAD l ON l.localidad_descripcion = m.Sucursal_Localidad
+                                  AND l.localidad_provincia = p.provincia_id
+    WHERE m.Sucursal_Direccion IS NOT NULL
+      AND NOT EXISTS (
+          SELECT 1
+          FROM LOS_GESTORES.SUCURSAL s
+          WHERE s.sucursal_direccion = m.Sucursal_Direccion
+            AND s.sucursal_localidad = l.localidad_id
+      );
+END;
+GO
+
+
 
 CREATE PROCEDURE LOS_GESTORES.SP_CLIENTE
 AS
@@ -73,69 +116,6 @@ END;
 GO
 
 
-CREATE PROCEDURE LOS_GESTORES.SP_SUCURSAL
-AS
-BEGIN
-   -- SET NOCOUNT ON;
-
-    INSERT INTO LOS_GESTORES.SUCURSAL (
-        sucursal_direccion,
-        sucursal_localidad,
-        sucursal_telefono,
-        sucursal_mail
-    )
-    SELECT DISTINCT
-        m.Sucursal_Direccion,
-        l.localidad_id,
-        m.Sucursal_Telefono,
-        m.Sucursal_Mail
-    FROM gd_esquema.MAESTRA m
-    JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.Sucursal_Provincia
-    JOIN LOS_GESTORES.LOCALIDAD l ON l.localidad_descripcion = m.Sucursal_Localidad
-                                  AND l.localidad_provincia = p.provincia_id
-    WHERE m.Sucursal_Direccion IS NOT NULL
-      AND NOT EXISTS (
-          SELECT 1
-          FROM LOS_GESTORES.SUCURSAL s
-          WHERE s.sucursal_direccion = m.Sucursal_Direccion
-            AND s.sucursal_localidad = l.localidad_id
-      );
-END;
-GO
-
-CREATE PROCEDURE LOS_GESTORES.SP_PROVEEDOR
-AS
-BEGIN
-   -- SET NOCOUNT ON;
-
-    INSERT INTO LOS_GESTORES.PROVEEDOR (
-        proveedor_cuit,
-        proveedor_localidad,
-        proveedor_razonSocial,
-        proveedor_direccion,
-        proveedor_telefono,
-        proveedor_mail
-    )
-    SELECT DISTINCT
-        m.Proveedor_CUIT,
-        l.localidad_id,
-        m.Proveedor_RazonSocial,
-        m.Proveedor_Direccion,
-        m.Proveedor_Telefono,
-        m.Proveedor_Mail
-    FROM gd_esquema.MAESTRA m
-    JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.Proveedor_Provincia
-    JOIN LOS_GESTORES.LOCALIDAD l ON l.localidad_descripcion = m.Proveedor_Localidad
-                                   AND l.localidad_provincia = p.provincia_id
-    WHERE m.Proveedor_CUIT IS NOT NULL
-      AND NOT EXISTS (
-          SELECT 1
-          FROM LOS_GESTORES.PROVEEDOR pr
-          WHERE pr.proveedor_cuit = m.Proveedor_CUIT
-      );
-END;
-GO
-
 CREATE PROCEDURE LOS_GESTORES.SP_SILLON_MEDIDA
 AS
 BEGIN
@@ -159,38 +139,6 @@ BEGIN
             HAVING Sillon_Medida_Alto IS NOT NULL 
 END;
 GO
-
-
-
-/*
-CREATE PROCEDURE LOS_GESTORES.SP_PEDIDO
-AS
-BEGIN
---	SET NOCOUNT ON;
-END;
-GO
-
-CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_PEDIDO
-AS
-BEGIN
---	SET NOCOUNT ON;
-END;
-GO
-
-CREATE PROCEDURE LOS_GESTORES.SP_FACTURA
-AS
-BEGIN
---	SET NOCOUNT ON;
-END;
-GO
-
-CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_FACTURA
-AS
-BEGIN
---	SET NOCOUNT ON;
-END;
-GO
-*/
 
 CREATE PROCEDURE LOS_GESTORES.SP_COMPRA
 AS
@@ -253,43 +201,19 @@ INSERT INTO LOS_GESTORES.Sillon_Modelo
 END;
 GO
 
-
-/*
-CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_COMPRA
-AS
-BEGIN
---	SET NOCOUNT ON;
-END;
-GO
-
-CREATE PROCEDURE LOS_GESTORES.SP_ENVIO
-AS
-BEGIN
---	SET NOCOUNT ON;
-END;
-GO
-
-CREATE PROCEDURE LOS_GESTORES.SP_SILLON
-AS
-BEGIN
---	SET NOCOUNT ON;
-END;
-GO
-
-
-
-
-CREATE PROCEDURE LOS_GESTORES.SP_MATERIAL
-AS
-BEGIN
---	SET NOCOUNT ON;
-END;
-GO
-
 CREATE PROCEDURE LOS_GESTORES.SP_MADERA
 AS
 BEGIN
 --	SET NOCOUNT ON;
+
+INSERT INTO [LOS_GESTORES].[Madera]
+           ([madera_color]
+           ,[madera_dureza])
+ SELECT MADERA_COLOR,MADERA_DUREZA
+  FROM [gd_esquema].[Maestra]
+  GROUP BY MADERA_COLOR,MADERA_DUREZA
+  HAVING Madera_Color IS NOT NULL ;
+
 END;
 GO
 
@@ -297,9 +221,16 @@ CREATE PROCEDURE LOS_GESTORES.SP_TELA
 AS
 BEGIN
 --	SET NOCOUNT ON;
+INSERT INTO [LOS_GESTORES].[Tela]
+           ([tela_color]
+           ,[tela_textura])
+ SELECT Tela_Color,Tela_Textura
+  FROM [gd_esquema].[Maestra]
+  GROUP BY Tela_Color,Tela_Textura
+  HAVING Tela_Color IS NOT NULL ;
 END;
 GO
-*/
+
 
 CREATE PROCEDURE LOS_GESTORES.SP_RELLENO
 AS
@@ -316,3 +247,105 @@ BEGIN
 		);
 END;
 GO
+
+/************* compras ********************/
+
+CREATE PROCEDURE LOS_GESTORES.SP_PROVEEDOR
+AS
+BEGIN
+   -- SET NOCOUNT ON;
+
+    INSERT INTO LOS_GESTORES.PROVEEDOR (
+        proveedor_cuit,
+        proveedor_localidad,
+        proveedor_razonSocial,
+        proveedor_direccion,
+        proveedor_telefono,
+        proveedor_mail
+    )
+    SELECT DISTINCT
+        m.Proveedor_CUIT,
+        l.localidad_id,
+        m.Proveedor_RazonSocial,
+        m.Proveedor_Direccion,
+        m.Proveedor_Telefono,
+        m.Proveedor_Mail
+    FROM gd_esquema.MAESTRA m
+    JOIN LOS_GESTORES.PROVINCIA p ON p.provincia_descripcion = m.Proveedor_Provincia
+    JOIN LOS_GESTORES.LOCALIDAD l ON l.localidad_descripcion = m.Proveedor_Localidad
+                                   AND l.localidad_provincia = p.provincia_id
+    WHERE m.Proveedor_CUIT IS NOT NULL
+      AND NOT EXISTS (
+          SELECT 1
+          FROM LOS_GESTORES.PROVEEDOR pr
+          WHERE pr.proveedor_cuit = m.Proveedor_CUIT
+      );
+END;
+GO
+
+
+/*
+CREATE PROCEDURE LOS_GESTORES.SP_MATERIAL
+AS
+BEGIN
+--	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_SILLON
+AS
+BEGIN
+--	SET NOCOUNT ON;
+END;
+GO
+
+
+CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_COMPRA
+AS
+BEGIN
+--	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_ENVIO
+AS
+BEGIN
+--	SET NOCOUNT ON;
+END;
+GO
+*/
+
+/*
+CREATE PROCEDURE LOS_GESTORES.SP_PEDIDO
+AS
+BEGIN
+--	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_PEDIDO
+AS
+BEGIN
+--	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_FACTURA
+AS
+BEGIN
+--	SET NOCOUNT ON;
+END;
+GO
+
+CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_FACTURA
+AS
+BEGIN
+--	SET NOCOUNT ON;
+END;
+GO
+*/
+
+
+
+
+
