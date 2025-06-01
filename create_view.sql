@@ -1,3 +1,7 @@
+/*
+DROP VIEW LOS_GESTORES.Material
+*/
+
 Create View Los_gestores.Material as 
 select 'Madera' Material_tipo
 	,madera_id Material_id
@@ -19,3 +23,6 @@ select 'Relleno' Material_tipo
 	,relleno_descripcion Material_descripcion
 	,relleno_precio Material_precio
 from LOS_GESTORES.Relleno
+
+
+

@@ -177,6 +177,7 @@ CREATE TABLE LOS_GESTORES.Factura (
 	factura_numero BIGINT,
 	factura_cliente BIGINT,
 	factura_sucursal BIGINT,
+	factura_pedido DECIMAL(18, 0), 
 	factura_fecha DATETIME2(6),
 	factura_total DECIMAL(38, 2),
 	CONSTRAINT PK_FACTURA PRIMARY KEY(factura_numero)
@@ -185,7 +186,6 @@ CREATE TABLE LOS_GESTORES.Factura (
 CREATE TABLE LOS_GESTORES.Detalle_Factura (
 	detalle_factura_id BIGINT IDENTITY(1, 1), -- detalle_factura_numero + detalle_factura_pedido_id
 	detalle_factura_numero BIGINT,
-	detalle_factura_pedido BIGINT, 
 	detalle_factura_cantidad DECIMAL(18, 0),
 	detalle_factura_precio DECIMAL(18, 2),
 	CONSTRAINT PK_DETALLE_FACTURA PRIMARY KEY(detalle_factura_id)
@@ -253,9 +253,9 @@ ALTER TABLE LOS_GESTORES.Detalle_Factura
 ADD CONSTRAINT FK_DETALLE_FACTURA FOREIGN KEY(detalle_factura_numero) 
 REFERENCES LOS_GESTORES.Factura(factura_numero)
 
-ALTER TABLE LOS_GESTORES.Detalle_Factura
-ADD CONSTRAINT FK_DETALLE_FACTURA_PEDIDO FOREIGN KEY(detalle_factura_pedido) 
-REFERENCES LOS_GESTORES.Detalle_Pedido(detalle_pedido_id)
+ALTER TABLE LOS_GESTORES.Factura
+ADD CONSTRAINT FK_FACTURA_PEDIDO FOREIGN KEY(factura_pedido) 
+REFERENCES LOS_GESTORES.Pedido(pedido_numero)
 
 ALTER TABLE LOS_GESTORES.Sucursal
 ADD CONSTRAINT FK_SUCURSAL_LOCALIDAD FOREIGN KEY(sucursal_localidad) 

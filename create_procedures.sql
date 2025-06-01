@@ -403,6 +403,27 @@ CREATE PROCEDURE LOS_GESTORES.SP_FACTURA
 AS
 BEGIN
 --	SET NOCOUNT ON;
+
+	INSERT INTO [LOS_GESTORES].[Factura]
+           ([factura_numero]
+           ,[factura_cliente]
+           ,[factura_sucursal]
+		   ,factura_pedido
+           ,[factura_fecha]
+           ,[factura_total])
+	SELECT distinct 
+		  [Factura_Numero]
+		  ,c.cliente_id 
+		  ,[Sucursal_NroSucursal] 
+		  ,[Pedido_numero]
+		  ,[Factura_Fecha]
+		  ,[Factura_Total]
+	  FROM [gd_esquema].[Maestra] TM
+	  JOIN LOS_GESTORES.Cliente C ON C.Cliente_Dni = TM.Cliente_Dni AND C.Cliente_Mail = TM.Cliente_Mail
+	  where Factura_Numero is not null
+	  AND Pedido_Numero IS NOT NULL
+
+
 END;
 GO
 
@@ -410,6 +431,18 @@ CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_FACTURA
 AS
 BEGIN
 --	SET NOCOUNT ON;
+
+INSERT INTO [LOS_GESTORES].[Detalle_Factura]
+           ([detalle_factura_numero]
+           ,[detalle_factura_cantidad]
+           ,[detalle_factura_precio])
+	SELECT
+		  [Factura_Numero]
+		  ,[Detalle_Factura_Precio]
+		  ,[Detalle_Factura_Cantidad]
+	  FROM [GD1C2025].[gd_esquema].[Maestra]
+	  where Factura_Numero is not null
+	   and Detalle_Factura_Cantidad is not null
 END;
 GO
 
@@ -418,9 +451,30 @@ CREATE PROCEDURE LOS_GESTORES.SP_ENVIO
 AS
 BEGIN
 --	SET NOCOUNT ON;
+
+INSERT INTO [LOS_GESTORES].[Envio]
+           ([envio_numero]
+           ,[envio_factura]
+           ,[envio_fecha_programada]
+           ,[envio_fecha]
+           ,[envio_importe_traslado]
+           ,[envio_importe_subida])
+SELECT 
+      [Envio_Numero]
+      ,[Factura_Numero]
+      ,[Envio_Fecha_Programada]
+      ,[Envio_Fecha]
+      ,[Envio_ImporteTraslado]
+      ,[Envio_importeSubida]
+  FROM [GD1C2025].[gd_esquema].[Maestra]
+  WHERE Envio_Numero IS NOT NULL
+
 END;
+
 GO
-*/
+
+
+
 
 
 
