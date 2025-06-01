@@ -122,7 +122,8 @@ CREATE TABLE LOS_GESTORES.Compra (
 CREATE TABLE LOS_GESTORES.Detalle_Compra (
 	detalle_compra_id BIGINT IDENTITY(1, 1), -- detalle_compra_numero + detalle_compra_material_id
 	detalle_compra_numero DECIMAL(18, 0),
-	detalle_compra_material_id BIGINT,
+	detalle_compra_tipo nvarchar(255),
+	detalle_compra_material BIGINT,
 	detalle_compra_precio DECIMAL(18, 2),
 	detalle_compra_cantidad DECIMAL(18, 0),
 	CONSTRAINT PK_DETALLE_COMPRA PRIMARY KEY(detalle_compra_id)

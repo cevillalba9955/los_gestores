@@ -278,29 +278,31 @@ GO
 CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_COMPRA
 AS
 BEGIN
-
-
-SELECT 
-      m.[Compra_Numero]
-	  ,m.Material_Tipo
-	  ,ma.material_id
-      ,m.[Detalle_Compra_Precio]
-      ,m.[Detalle_Compra_Cantidad] 
-  FROM [GD1C2025].[gd_esquema].[Maestra] m
-  join LOS_GESTORES.material ma on m.Material_Nombre = ma.material_nombre 
-	and m.Material_Tipo = ma.material_tipo
-   where m.COMPRA_NUMERO IS NOT NULL
-
 --	SET NOCOUNT ON;
+
+INSERT INTO [LOS_GESTORES].[Detalle_Compra]
+           ([detalle_compra_numero]
+           ,[detalle_compra_tipo]
+           ,[detalle_compra_material]
+           ,[detalle_compra_precio]
+           ,[detalle_compra_cantidad])
+	SELECT 
+		  m.[Compra_Numero]
+		  ,m.Material_Tipo
+		  ,ma.material_id
+		  ,m.[Detalle_Compra_Precio]
+		  ,m.[Detalle_Compra_Cantidad] 
+	  FROM [gd_esquema].[Maestra] m
+	  join LOS_GESTORES.material ma on m.Material_Nombre = ma.material_nombre 
+		and m.Material_Tipo = ma.material_tipo
+	   where m.COMPRA_NUMERO IS NOT NULL
+
 END;
 GO
 
 
 
-/*
-
-
-/**************** pedidos ************/
+/**************** CLIENTE ************/
 
 CREATE PROCEDURE LOS_GESTORES.SP_CLIENTE
 AS
@@ -333,18 +335,43 @@ BEGIN
     WHERE m.Cliente_Nombre IS NOT NULL
       AND m.Cliente_Apellido IS NOT NULL
       AND m.Cliente_DNI IS NOT NULL
-      AND NOT EXISTS (
-          SELECT 1
-          FROM LOS_GESTORES.CLIENTE c
-          WHERE c.cliente_dni = m.Cliente_DNI
-      );
 END;
 GO
+
+
+/**************** pedidos ************/
 
 CREATE PROCEDURE LOS_GESTORES.SP_PEDIDO
 AS
 BEGIN
 --	SET NOCOUNT ON;
+INSERT INTO [LOS_GESTORES].[Pedido]
+           ([pedido_numero]
+           ,[pedido_cliente_id]
+           ,[pedido_sucursal_nroSucursal]
+           ,[pedido_fecha]
+           ,[pedido_total]
+           ,[pedido_estado])
+  SELECT DISTINCT 
+      [Pedido_Numero]
+      ,C.CLIENTE_ID Pedido_Cliente
+      ,[Sucursal_NroSucursal]
+      ,[Pedido_Fecha]
+      ,[Pedido_Total]
+      ,[Pedido_Estado]
+  FROM [gd_esquema].[Maestra] TM
+  JOIN LOS_GESTORES.Cliente C ON C.Cliente_Dni = TM.Cliente_Dni AND C.Cliente_Mail = TM.Cliente_Mail
+    WHERE Pedido_Numero IS NOT NULL
+
+
+-- AGREGO INFORMACION DE CANCELACION DE PEDIDOS
+UPDATE t1
+	SET t1.pedido_cancelacion_fecha = m.Pedido_Cancelacion_Fecha
+	 , t1.pedido_cancelacion_motivo = m.Pedido_Cancelacion_Motivo
+	FROM LOS_GESTORES.PEDIDO t1
+	JOIN gd_esquema.Maestra	m on m.Pedido_Numero = t1.pedido_numero  and m.Pedido_Cancelacion_Fecha is not null 
+
+
 END;
 GO
 
@@ -352,6 +379,22 @@ CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_PEDIDO
 AS
 BEGIN
 --	SET NOCOUNT ON;
+
+INSERT INTO [LOS_GESTORES].[Detalle_Pedido]
+           ([detalle_pedido_numero]
+           ,[detalle_pedido_sillon_codigo]
+           ,[detalle_pedido_cantidad]
+           ,[detalle_pedido_precio])
+SELECT DISTINCT
+      [Pedido_Numero] 
+      ,[Sillon_Codigo]
+      ,[Detalle_Pedido_Cantidad]
+      ,[Detalle_Pedido_Precio]
+  FROM [gd_esquema].[Maestra]
+	WHERE Pedido_Numero IS NOT NULL
+	  AND Sillon_Codigo IS NOT NULL
+
+
 END;
 GO
 

@@ -1,4 +1,4 @@
-Create View Material as 
+Create View Los_gestores.Material as 
 select 'Madera' Material_tipo
 	,madera_id Material_id
 	,madera_nombre Material_nombre
