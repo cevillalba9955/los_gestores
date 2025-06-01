@@ -347,8 +347,8 @@ BEGIN
 --	SET NOCOUNT ON;
 INSERT INTO [LOS_GESTORES].[Pedido]
            ([pedido_numero]
-           ,[pedido_cliente_id]
-           ,[pedido_sucursal_nroSucursal]
+           ,[pedido_cliente]
+           ,[pedido_sucursal]
            ,[pedido_fecha]
            ,[pedido_total]
            ,[pedido_estado])
@@ -398,6 +398,7 @@ SELECT DISTINCT
 END;
 GO
 
+/************* facturas **************/
 CREATE PROCEDURE LOS_GESTORES.SP_FACTURA
 AS
 BEGIN

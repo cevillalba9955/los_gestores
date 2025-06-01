@@ -151,8 +151,8 @@ CREATE TABLE LOS_GESTORES.Cliente (
 
 CREATE TABLE LOS_GESTORES.Pedido (
 	pedido_numero DECIMAL(18, 0),
-	pedido_cliente_id BIGINT,
-	pedido_sucursal_nroSucursal BIGINT,
+	pedido_cliente BIGINT,
+	pedido_sucursal BIGINT,
 	pedido_fecha DATETIME2(6),
 	pedido_total DECIMAL(18, 2),
 	pedido_estado NVARCHAR(255),
@@ -175,8 +175,8 @@ CREATE TABLE LOS_GESTORES.Detalle_Pedido (
 
 CREATE TABLE LOS_GESTORES.Factura (
 	factura_numero BIGINT,
-	factura_cliente_id BIGINT,
-	factura_sucursal_nroSucursal BIGINT,
+	factura_cliente BIGINT,
+	factura_sucursal BIGINT,
 	factura_fecha DATETIME2(6),
 	factura_total DECIMAL(38, 2),
 	CONSTRAINT PK_FACTURA PRIMARY KEY(factura_numero)
@@ -185,7 +185,7 @@ CREATE TABLE LOS_GESTORES.Factura (
 CREATE TABLE LOS_GESTORES.Detalle_Factura (
 	detalle_factura_id BIGINT IDENTITY(1, 1), -- detalle_factura_numero + detalle_factura_pedido_id
 	detalle_factura_numero BIGINT,
-	detalle_factura_pedido_id BIGINT, 
+	detalle_factura_pedido BIGINT, 
 	detalle_factura_cantidad DECIMAL(18, 0),
 	detalle_factura_precio DECIMAL(18, 2),
 	CONSTRAINT PK_DETALLE_FACTURA PRIMARY KEY(detalle_factura_id)
@@ -193,7 +193,7 @@ CREATE TABLE LOS_GESTORES.Detalle_Factura (
 
 CREATE TABLE LOS_GESTORES.Envio (
 	envio_numero DECIMAL(18, 0),
-	envio_factura_numero BIGINT,
+	envio_factura BIGINT,
 	envio_fecha_programada DATETIME2(6),
 	envio_fecha DATETIME2(6),
 	envio_importe_traslado DECIMAL(18, 2),
@@ -226,11 +226,11 @@ ADD CONSTRAINT FK_CLIENTE_LOCALIDAD FOREIGN KEY(cliente_localidad)
 REFERENCES LOS_GESTORES.Localidad(localidad_id)
 
 ALTER TABLE LOS_GESTORES.Pedido
-ADD CONSTRAINT FK_PEDIDO_CLIENTE FOREIGN KEY(pedido_cliente_id) 
+ADD CONSTRAINT FK_PEDIDO_CLIENTE FOREIGN KEY(pedido_cliente) 
 REFERENCES LOS_GESTORES.Cliente(cliente_id)
 
 ALTER TABLE LOS_GESTORES.Pedido
-ADD CONSTRAINT FK_PEDIDO_SUCURSAL FOREIGN KEY(pedido_sucursal_nroSucursal) 
+ADD CONSTRAINT FK_PEDIDO_SUCURSAL FOREIGN KEY(pedido_sucursal) 
 REFERENCES LOS_GESTORES.Sucursal(sucursal_nroSucursal)
 
 ALTER TABLE LOS_GESTORES.Detalle_Pedido
@@ -242,11 +242,11 @@ ADD CONSTRAINT FK_DETALL_PEDIDO_SILLON FOREIGN KEY(detalle_pedido_sillon_codigo)
 REFERENCES LOS_GESTORES.Sillon(sillon_codigo)
 
 ALTER TABLE LOS_GESTORES.Factura
-ADD CONSTRAINT FK_FACTURA_CLIENTE FOREIGN KEY(factura_cliente_id) 
+ADD CONSTRAINT FK_FACTURA_CLIENTE FOREIGN KEY(factura_cliente) 
 REFERENCES LOS_GESTORES.Cliente(cliente_id)
 
 ALTER TABLE LOS_GESTORES.Factura
-ADD CONSTRAINT FK_FACTURA_SUCURSAL FOREIGN KEY(factura_sucursal_nroSucursal) 
+ADD CONSTRAINT FK_FACTURA_SUCURSAL FOREIGN KEY(factura_sucursal) 
 REFERENCES LOS_GESTORES.Sucursal(sucursal_nroSucursal)
 
 ALTER TABLE LOS_GESTORES.Detalle_Factura
@@ -254,7 +254,7 @@ ADD CONSTRAINT FK_DETALLE_FACTURA FOREIGN KEY(detalle_factura_numero)
 REFERENCES LOS_GESTORES.Factura(factura_numero)
 
 ALTER TABLE LOS_GESTORES.Detalle_Factura
-ADD CONSTRAINT FK_DETALLE_FACTURA_PEDIDO FOREIGN KEY(detalle_factura_pedido_id) 
+ADD CONSTRAINT FK_DETALLE_FACTURA_PEDIDO FOREIGN KEY(detalle_factura_pedido) 
 REFERENCES LOS_GESTORES.Detalle_Pedido(detalle_pedido_id)
 
 ALTER TABLE LOS_GESTORES.Sucursal
@@ -284,7 +284,7 @@ REFERENCES LOS_GESTORES.Material(material_id)
 */
 
 ALTER TABLE LOS_GESTORES.Envio
-ADD CONSTRAINT FK_ENVIO_FACTURA FOREIGN KEY(envio_factura_numero) 
+ADD CONSTRAINT FK_ENVIO_FACTURA FOREIGN KEY(envio_factura) 
 REFERENCES LOS_GESTORES.Factura(factura_numero)
 
 ALTER TABLE LOS_GESTORES.Sillon
