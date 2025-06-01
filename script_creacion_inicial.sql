@@ -13,7 +13,6 @@ PRINT 'Esquema LOS_GESTORES creado.';
 PRINT '2. Creando tablas del modelo transaccional';
 GO
 
-
 CREATE TABLE LOS_GESTORES.Provincia
 (
 	provincia_id BIGINT IDENTITY(1, 1),
@@ -101,7 +100,7 @@ CREATE TABLE LOS_GESTORES.Sillon
 	CONSTRAINT PK_SILLON PRIMARY KEY(sillon_codigo)
 );
 
-/************* compras ********************/
+/************* Compras ********************/
 
 CREATE TABLE LOS_GESTORES.Proveedor
 (
@@ -136,8 +135,7 @@ CREATE TABLE LOS_GESTORES.Detalle_Compra
 	CONSTRAINT PK_DETALLE_COMPRA PRIMARY KEY(detalle_compra_id)
 );
 
-
-/********** CLIENTES **********************/
+/********** Clientes **********************/
 
 CREATE TABLE LOS_GESTORES.Cliente
 (
@@ -153,8 +151,7 @@ CREATE TABLE LOS_GESTORES.Cliente
 	CONSTRAINT PK_CLIENTE PRIMARY KEY(cliente_id)
 );
 
-
-/************* pedidos ***********************/
+/************* Pedidos ***********************/
 
 CREATE TABLE LOS_GESTORES.Pedido
 (
@@ -179,7 +176,7 @@ CREATE TABLE LOS_GESTORES.Detalle_Pedido
 	CONSTRAINT PK_DETALLE_PEDIDO PRIMARY KEY(detalle_pedido_id)
 );
 
-/************ facturas *******************/
+/************ Facturas *******************/
 
 CREATE TABLE LOS_GESTORES.Factura
 (
@@ -284,16 +281,16 @@ PRINT 'Constraints UNIQUE implementados correctamente.';
 
 -- Implementacion de las FKs
 
-PRINT '6. Implementando FKs';
+PRINT '5. Implementando FKs';
 GO
 
-/**** fk provincia ****/
+/**** FK provincia ****/
 
 ALTER TABLE LOS_GESTORES.Localidad
 ADD CONSTRAINT FK_LOCALIDAD_PROVINCIA FOREIGN KEY(localidad_provincia)
 REFERENCES LOS_GESTORES.Provincia(provincia_id)
 
-/**** fk localidad ****/
+/**** FK localidad ****/
 
 ALTER TABLE LOS_GESTORES.Cliente
 ADD CONSTRAINT FK_CLIENTE_LOCALIDAD FOREIGN KEY(cliente_localidad) 
@@ -307,7 +304,7 @@ ALTER TABLE LOS_GESTORES.Proveedor
 ADD CONSTRAINT FK_PROVEEDOR_LOCALIDAD FOREIGN KEY(proveedor_localidad) 
 REFERENCES LOS_GESTORES.Localidad(localidad_id)
 
-/*** fk sucursales ***/
+/*** FK sucursales ***/
 
 ALTER TABLE LOS_GESTORES.Pedido
 ADD CONSTRAINT FK_PEDIDO_SUCURSAL FOREIGN KEY(pedido_sucursal) 
@@ -321,7 +318,7 @@ ALTER TABLE LOS_GESTORES.Compra
 ADD CONSTRAINT FK_COMPRA_SUCURSAL FOREIGN KEY(compra_sucursal) 
 REFERENCES LOS_GESTORES.Sucursal(sucursal_nroSucursal)
 
-/** fk clientes **/ 
+/** FK clientes **/ 
 
 ALTER TABLE LOS_GESTORES.Pedido
 ADD CONSTRAINT FK_PEDIDO_CLIENTE FOREIGN KEY(pedido_cliente) 
@@ -331,7 +328,7 @@ ALTER TABLE LOS_GESTORES.Factura
 ADD CONSTRAINT FK_FACTURA_CLIENTE FOREIGN KEY(factura_cliente) 
 REFERENCES LOS_GESTORES.Cliente(cliente_id)
 
-/** fk pedido **/ 
+/** FK pedido **/ 
 
 ALTER TABLE LOS_GESTORES.Detalle_Pedido
 ADD CONSTRAINT FK_DETALLE_PEDIDO FOREIGN KEY(detalle_pedido_numero) 
@@ -341,7 +338,7 @@ ALTER TABLE LOS_GESTORES.Factura
 ADD CONSTRAINT FK_FACTURA_PEDIDO FOREIGN KEY(factura_pedido) 
 REFERENCES LOS_GESTORES.Pedido(pedido_numero)
 
-/** fk factura **/
+/** FK factura **/
 
 ALTER TABLE LOS_GESTORES.Detalle_Factura
 ADD CONSTRAINT FK_DETALLE_FACTURA FOREIGN KEY(detalle_factura_numero) 
@@ -353,20 +350,19 @@ ADD CONSTRAINT FK_ENVIO_FACTURA FOREIGN KEY(envio_factura)
 REFERENCES LOS_GESTORES.Factura(factura_numero)
 
 
-/** fk proveedor  */ 
+/** FK proveedor  */ 
 
 ALTER TABLE LOS_GESTORES.Compra
 ADD CONSTRAINT FK_COMPRA_PROVEEDOR FOREIGN KEY(compra_proveedor) 
 REFERENCES LOS_GESTORES.Proveedor(proveedor_id)
 
-/* fk compra */ 
+/* FK compra */ 
 
 ALTER TABLE LOS_GESTORES.Detalle_Compra
 ADD CONSTRAINT FK_DETALLE_COMPRA FOREIGN KEY(detalle_compra_numero) 
 REFERENCES LOS_GESTORES.Compra(compra_numero)
 
-
-/* fk sillon */ 
+/* FK sillon */ 
 
 ALTER TABLE LOS_GESTORES.Detalle_Pedido
 ADD CONSTRAINT FK_DETALL_PEDIDO_SILLON FOREIGN KEY(detalle_pedido_sillon_codigo) 
@@ -394,9 +390,13 @@ REFERENCES LOS_GESTORES.Relleno(relleno_id)
 
 PRINT 'FKs implementadas correctamente.';
 GO
--- creacion de Triggers 
+-- Creacion de Triggers 
+
+PRINT '6. Creando Triggers';
+GO
 
 -- Trigger para evitar la insercion si no hay material registrado
+
 CREATE TRIGGER LOS_GESTORES.DETALLE_COMPRA_AI
    ON LOS_GESTORES.DETALLE_COMPRA 
    AFTER INSERT
@@ -411,13 +411,14 @@ BEGIN
             AND P.MATERIAL_ID = I.DETALLE_COMPRA_MATERIAL 
     )
     BEGIN
-        RAISERROR ('Violaci�n de clave for�nea DETALLE_COMPRA_MATERIAL', 16, 1);
+        RAISERROR ('Violacion de clave foranea DETALLE_COMPRA_MATERIAL', 16, 1);
         ROLLBACK TRANSACTION;
     END
 END
 GO
 
 -- Triggers para evitar eliminaciones en la tabla DETALLE_COMPRA si hay referencias en la tabla de materiales
+
 CREATE TRIGGER LOS_GESTORES.MADERA_AD
 ON LOS_GESTORES.MADERA
 AFTER DELETE
@@ -430,7 +431,7 @@ BEGIN
             and c.DETALLE_COMPRA_MATERIAL = d.madera_id
     )
     BEGIN
-        RAISERROR ('No se puede eliminar el registro porque est� referenciado en DETALLE_COMPRA', 16, 1);
+        RAISERROR ('No se puede eliminar el registro porque esta referenciado en DETALLE_COMPRA', 16, 1);
         ROLLBACK TRANSACTION;
     END
 END;
@@ -448,7 +449,7 @@ BEGIN
             and c.DETALLE_COMPRA_MATERIAL = d.tela_id
     )
     BEGIN
-        RAISERROR ('No se puede eliminar el registro porque est� referenciado en DETALLE_COMPRA', 16, 1);
+        RAISERROR ('No se puede eliminar el registro porque esta referenciado en DETALLE_COMPRA', 16, 1);
         ROLLBACK TRANSACTION;
     END
 END;
@@ -466,7 +467,7 @@ BEGIN
             and c.DETALLE_COMPRA_MATERIAL = d.relleno_id
     )
     BEGIN
-        RAISERROR ('No se puede eliminar el registro porque est� referenciado en DETALLE_COMPRA', 16, 1);
+        RAISERROR ('No se puede eliminar el registro porque esta referenciado en DETALLE_COMPRA', 16, 1);
         ROLLBACK TRANSACTION;
     END
 END;
@@ -476,13 +477,10 @@ GO
 PRINT 'Triggers implementadas correctamente.';
 GO
 
-
-
 -- Creacion de los Stored procedures
 
-PRINT '8. Creando Stored Procedures de migraci�n';
+PRINT '7. Creando Stored Procedures de migracion';
 GO
-
 
 CREATE PROCEDURE LOS_GESTORES.SP_PROVINCIA
 AS
@@ -557,7 +555,8 @@ BEGIN
 END;
 GO
 
-/*************** MATERIALES *********************/
+/*************** Materiales *********************/
+
 CREATE PROCEDURE LOS_GESTORES.SP_MADERA
 AS
 BEGIN
@@ -630,7 +629,6 @@ CREATE PROCEDURE LOS_GESTORES.SP_SILLON_MODELO
 AS
 BEGIN
   --	SET NOCOUNT ON;
-
   INSERT INTO LOS_GESTORES.Sillon_Modelo
     (sillon_modelo_codigo
     ,sillon_modelo
@@ -696,9 +694,7 @@ BEGIN
 END;
 GO
 
-
-
-/************* compras ********************/
+/************* Compras ********************/
 
 CREATE PROCEDURE LOS_GESTORES.SP_PROVEEDOR
 AS
@@ -760,7 +756,6 @@ CREATE PROCEDURE LOS_GESTORES.SP_DETALLE_COMPRA
 AS
 BEGIN
   --	SET NOCOUNT ON;
-
   INSERT INTO [LOS_GESTORES].[Detalle_Compra]
     ([detalle_compra_numero]
     ,[detalle_compra_tipo]
@@ -781,9 +776,7 @@ BEGIN
 END;
 GO
 
-
-
-/**************** CLIENTE ************/
+/**************** Cliente ************/
 
 CREATE PROCEDURE LOS_GESTORES.SP_CLIENTE
 AS
@@ -820,7 +813,7 @@ BEGIN
 END;
 GO
 
-/**************** pedidos ************/
+/**************** Pedidos ************/
 
 CREATE PROCEDURE LOS_GESTORES.SP_PEDIDO
 AS
@@ -844,6 +837,7 @@ BEGIN
   WHERE Pedido_Numero IS NOT NULL
 
   -- AGREGO INFORMACION DE CANCELACION DE PEDIDOS
+
   UPDATE t1
 	SET t1.pedido_cancelacion_fecha = m.Pedido_Cancelacion_Fecha
 	 , t1.pedido_cancelacion_motivo = m.Pedido_Cancelacion_Motivo
@@ -872,7 +866,8 @@ BEGIN
 END;
 GO
 
-/************* facturas **************/
+/************* Facturas **************/
+
 CREATE PROCEDURE LOS_GESTORES.SP_FACTURA
 AS
 BEGIN
@@ -937,11 +932,11 @@ END;
 
 GO
 
-PRINT 'Stored Procedures de migraci�n creados correctamente.';
+PRINT 'Stored Procedures de migracion creados correctamente.';
 
 -- Ejecutar Stored procedures
 
-PRINT '9. Ejecutando Stored Procedures de migraci�n de datos';
+PRINT '8. Ejecutando Stored Procedures de migracion de datos';
 GO
 
 EXEC LOS_GESTORES.SP_PROVINCIA
@@ -964,5 +959,5 @@ EXEC LOS_GESTORES.SP_DETALLE_FACTURA
 EXEC LOS_GESTORES.SP_ENVIO
 GO
 
-PRINT 'Migraci�n de datos inicial completada.';
+PRINT 'Migracion de datos inicial completada.';
 PRINT 'Script finalizado.';
