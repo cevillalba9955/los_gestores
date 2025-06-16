@@ -38,35 +38,36 @@ CREATE TABLE LOS_GESTORES.Sucursal
 	CONSTRAINT PK_SUCURSAL PRIMARY KEY(sucursal_nroSucursal)
 );
 
+CREATE TABLE LOS_GESTORES.Material
+(
+    material_id BIGINT IDENTITY(1, 1),
+    material_tipo NVARCHAR(255), -- Madera, Tela, Relleno
+    material_nombre NVARCHAR(255),
+    material_descripcion NVARCHAR(255),
+    material_precio DECIMAL(38,2),
+    CONSTRAINT PK_MATERIAL PRIMARY KEY(material_id)
+);
+
 CREATE TABLE LOS_GESTORES.Madera
 (
-	madera_id BIGINT IDENTITY(1, 1),
-	madera_nombre NVARCHAR(255),
-	madera_descripcion NVARCHAR(255),
+	madera_id BIGINT, 
 	madera_color NVARCHAR(255),
 	madera_dureza NVARCHAR(255),
-	madera_precio DECIMAL(38,2),
 	CONSTRAINT PK_MADERA PRIMARY KEY(madera_id)
 );
 
 CREATE TABLE LOS_GESTORES.Tela
 (
-	tela_id BIGINT IDENTITY(1, 1),
-	tela_nombre NVARCHAR(255),
-	tela_descripcion NVARCHAR(255),
+	tela_id BIGINT, 
 	tela_color NVARCHAR(255),
 	tela_textura NVARCHAR(255),
-	tela_precio DECIMAL(38,2),
 	CONSTRAINT PK_TELA PRIMARY KEY(tela_id)
 );
 
 CREATE TABLE LOS_GESTORES.Relleno
 (
-	relleno_id BIGINT IDENTITY(1,1),
-	relleno_nombre NVARCHAR(255),
-	relleno_descripcion NVARCHAR(255),
+	relleno_id BIGINT, 
 	relleno_densidad DECIMAL(38, 2),
-	relleno_precio DECIMAL(38,2),
 	CONSTRAINT PK_RELLENO PRIMARY KEY(relleno_id)
 );
 
@@ -94,13 +95,11 @@ CREATE TABLE LOS_GESTORES.Sillon
 	sillon_codigo BIGINT,
 	sillon_modelo_codigo BIGINT,
 	sillon_medida BIGINT,
-	sillon_madera BIGINT,
-	sillon_tela BIGINT,
-	sillon_relleno BIGINT,
+	sillon_madera BIGINT, 
+	sillon_tela BIGINT, 
+	sillon_relleno BIGINT, 
 	CONSTRAINT PK_SILLON PRIMARY KEY(sillon_codigo)
 );
-
-/************* Compras ********************/
 
 CREATE TABLE LOS_GESTORES.Proveedor
 (
@@ -128,14 +127,11 @@ CREATE TABLE LOS_GESTORES.Detalle_Compra
 (
 	detalle_compra_id BIGINT IDENTITY(1, 1),
 	detalle_compra_numero DECIMAL(18, 0),
-	detalle_compra_tipo nvarchar(255),
-	detalle_compra_material BIGINT,
+	detalle_compra_material BIGINT, 
 	detalle_compra_precio DECIMAL(18, 2),
 	detalle_compra_cantidad DECIMAL(18, 0),
 	CONSTRAINT PK_DETALLE_COMPRA PRIMARY KEY(detalle_compra_id)
 );
-
-/********** Clientes **********************/
 
 CREATE TABLE LOS_GESTORES.Cliente
 (
@@ -150,8 +146,6 @@ CREATE TABLE LOS_GESTORES.Cliente
 	cliente_telefono NVARCHAR(255),
 	CONSTRAINT PK_CLIENTE PRIMARY KEY(cliente_id)
 );
-
-/************* Pedidos ***********************/
 
 CREATE TABLE LOS_GESTORES.Pedido
 (
@@ -175,8 +169,6 @@ CREATE TABLE LOS_GESTORES.Detalle_Pedido
 	detalle_pedido_precio DECIMAL(18, 2),
 	CONSTRAINT PK_DETALLE_PEDIDO PRIMARY KEY(detalle_pedido_id)
 );
-
-/************ Facturas *******************/
 
 CREATE TABLE LOS_GESTORES.Factura
 (
@@ -213,39 +205,9 @@ GO
 
 PRINT 'Tablas creadas correctamente.';
 
--- Creacion de vista
-
-PRINT '3. Creacion de vista';
-GO
-
-CREATE VIEW LOS_GESTORES.Material AS
-SELECT 'Madera' AS Material_tipo,
-       madera_id AS Material_id,
-       madera_nombre AS Material_nombre,
-       madera_descripcion AS Material_descripcion,
-       madera_precio AS Material_precio
-FROM LOS_GESTORES.Madera
-UNION 
-SELECT 'Tela' AS Material_tipo,
-       tela_id AS Material_id,
-       tela_nombre AS Material_nombre,
-       tela_descripcion AS Material_descripcion,
-       tela_precio AS Material_precio
-FROM LOS_GESTORES.Tela
-UNION 
-SELECT 'Relleno' AS Material_tipo,
-       relleno_id AS Material_id,
-       relleno_nombre AS Material_nombre,
-       relleno_descripcion AS Material_descripcion,
-       relleno_precio AS Material_precio
-FROM LOS_GESTORES.Relleno;
-GO
-
-PRINT 'Vista creada correctamente.';
-
 -- Implementacion de Constraints Unique
 
-PRINT '4. Implementando constraints UNIQUE';
+PRINT '3. Implementando constraints UNIQUE';
 GO
 
 ALTER TABLE LOS_GESTORES.PROVINCIA
@@ -265,32 +227,38 @@ ALTER TABLE LOS_GESTORES.Sillon_Medida
 ADD CONSTRAINT UQ_SillonMedida_Alto_Ancho_Profundidad UNIQUE (sillon_medida_alto, sillon_medida_ancho, sillon_medida_profundidad);
 GO
 
+ALTER TABLE LOS_GESTORES.Material
+ADD CONSTRAINT UQ_Material_Tipo_Nombre UNIQUE (material_tipo, material_nombre);
+GO
+
+/*
 ALTER TABLE LOS_GESTORES.Madera
-ADD CONSTRAINT UQ_Madera_Color_Nombre UNIQUE (madera_color, madera_nombre);
+ADD CONSTRAINT UQ_Madera_Color_Dureza UNIQUE (madera_color, madera_dureza); 
 GO
 
 ALTER TABLE LOS_GESTORES.Tela
-ADD CONSTRAINT UQ_Tela_Color_Descripcion UNIQUE (tela_color, tela_descripcion);
+ADD CONSTRAINT UQ_Tela_Color_Textura UNIQUE (tela_color, tela_textura); 
 GO
 
 ALTER TABLE LOS_GESTORES.Relleno
-ADD CONSTRAINT UQ_Relleno_Nombre UNIQUE (relleno_nombre);
+ADD CONSTRAINT UQ_Relleno_Densidad UNIQUE (relleno_densidad);
 GO
+*/
 
 PRINT 'Constraints UNIQUE implementados correctamente.';
 
 -- Implementacion de las FKs
 
-PRINT '5. Implementando FKs';
+PRINT '4. Implementando FKs';
 GO
 
-/**** FK provincia ****/
+-- Provincia
 
 ALTER TABLE LOS_GESTORES.Localidad
 ADD CONSTRAINT FK_LOCALIDAD_PROVINCIA FOREIGN KEY(localidad_provincia)
 REFERENCES LOS_GESTORES.Provincia(provincia_id)
 
-/**** FK localidad ****/
+-- Localidad
 
 ALTER TABLE LOS_GESTORES.Cliente
 ADD CONSTRAINT FK_CLIENTE_LOCALIDAD FOREIGN KEY(cliente_localidad) 
@@ -304,7 +272,7 @@ ALTER TABLE LOS_GESTORES.Proveedor
 ADD CONSTRAINT FK_PROVEEDOR_LOCALIDAD FOREIGN KEY(proveedor_localidad) 
 REFERENCES LOS_GESTORES.Localidad(localidad_id)
 
-/*** FK sucursales ***/
+-- Sucursal
 
 ALTER TABLE LOS_GESTORES.Pedido
 ADD CONSTRAINT FK_PEDIDO_SUCURSAL FOREIGN KEY(pedido_sucursal) 
@@ -318,7 +286,7 @@ ALTER TABLE LOS_GESTORES.Compra
 ADD CONSTRAINT FK_COMPRA_SUCURSAL FOREIGN KEY(compra_sucursal) 
 REFERENCES LOS_GESTORES.Sucursal(sucursal_nroSucursal)
 
-/** FK clientes **/ 
+-- Cliente 
 
 ALTER TABLE LOS_GESTORES.Pedido
 ADD CONSTRAINT FK_PEDIDO_CLIENTE FOREIGN KEY(pedido_cliente) 
@@ -328,7 +296,7 @@ ALTER TABLE LOS_GESTORES.Factura
 ADD CONSTRAINT FK_FACTURA_CLIENTE FOREIGN KEY(factura_cliente) 
 REFERENCES LOS_GESTORES.Cliente(cliente_id)
 
-/** FK pedido **/ 
+-- Pedido
 
 ALTER TABLE LOS_GESTORES.Detalle_Pedido
 ADD CONSTRAINT FK_DETALLE_PEDIDO FOREIGN KEY(detalle_pedido_numero) 
@@ -338,31 +306,33 @@ ALTER TABLE LOS_GESTORES.Factura
 ADD CONSTRAINT FK_FACTURA_PEDIDO FOREIGN KEY(factura_pedido) 
 REFERENCES LOS_GESTORES.Pedido(pedido_numero)
 
-/** FK factura **/
+-- Factura
 
 ALTER TABLE LOS_GESTORES.Detalle_Factura
 ADD CONSTRAINT FK_DETALLE_FACTURA FOREIGN KEY(detalle_factura_numero) 
 REFERENCES LOS_GESTORES.Factura(factura_numero)
 
-
 ALTER TABLE LOS_GESTORES.Envio
 ADD CONSTRAINT FK_ENVIO_FACTURA FOREIGN KEY(envio_factura) 
 REFERENCES LOS_GESTORES.Factura(factura_numero)
 
-
-/** FK proveedor  */ 
+-- Proveedor
 
 ALTER TABLE LOS_GESTORES.Compra
 ADD CONSTRAINT FK_COMPRA_PROVEEDOR FOREIGN KEY(compra_proveedor) 
 REFERENCES LOS_GESTORES.Proveedor(proveedor_id)
 
-/* FK compra */ 
+-- Compra
 
 ALTER TABLE LOS_GESTORES.Detalle_Compra
 ADD CONSTRAINT FK_DETALLE_COMPRA FOREIGN KEY(detalle_compra_numero) 
 REFERENCES LOS_GESTORES.Compra(compra_numero)
 
-/* FK sillon */ 
+ALTER TABLE LOS_GESTORES.Detalle_Compra
+ADD CONSTRAINT FK_DETALLE_COMPRA_MATERIAL FOREIGN KEY(detalle_compra_material) 
+REFERENCES LOS_GESTORES.Material(material_id);
+
+-- Sillon
 
 ALTER TABLE LOS_GESTORES.Detalle_Pedido
 ADD CONSTRAINT FK_DETALL_PEDIDO_SILLON FOREIGN KEY(detalle_pedido_sillon_codigo) 
@@ -377,24 +347,69 @@ ADD CONSTRAINT FK_SILLON_MEDIDA FOREIGN KEY(sillon_medida)
 REFERENCES LOS_GESTORES.Sillon_Medida(sillon_medida_id)
 
 ALTER TABLE LOS_GESTORES.Sillon
-ADD CONSTRAINT FK_SILLON_TELA FOREIGN KEY(sillon_tela) 
-REFERENCES LOS_GESTORES.Tela(tela_id)
+ADD CONSTRAINT FK_SILLON_MADERA FOREIGN KEY(sillon_madera) 
+REFERENCES LOS_GESTORES.Madera(madera_id); 
 
 ALTER TABLE LOS_GESTORES.Sillon
-ADD CONSTRAINT FK_SILLON_MADERA FOREIGN KEY(sillon_madera) 
-REFERENCES LOS_GESTORES.Madera(madera_id)
+ADD CONSTRAINT FK_SILLON_TELA FOREIGN KEY(sillon_tela) 
+REFERENCES LOS_GESTORES.Tela(tela_id);
 
 ALTER TABLE LOS_GESTORES.Sillon
 ADD CONSTRAINT FK_SILLON_RELLENO FOREIGN KEY(sillon_relleno)
-REFERENCES LOS_GESTORES.Relleno(relleno_id)
+REFERENCES LOS_GESTORES.Relleno(relleno_id); 
+
+-- Materiales
+
+ALTER TABLE LOS_GESTORES.Madera
+ADD CONSTRAINT FK_MADERA_MATERIAL FOREIGN KEY(madera_id) 
+REFERENCES LOS_GESTORES.Material(material_id);
+
+ALTER TABLE LOS_GESTORES.Tela
+ADD CONSTRAINT FK_TELA_MATERIAL FOREIGN KEY(tela_id) 
+REFERENCES LOS_GESTORES.Material(material_id);
+
+ALTER TABLE LOS_GESTORES.Relleno
+ADD CONSTRAINT FK_RELLENO_MATERIAL FOREIGN KEY(relleno_id) 
+REFERENCES LOS_GESTORES.Material(material_id);
 
 PRINT 'FKs implementadas correctamente.';
 GO
+
 -- Creacion de Triggers 
 
-PRINT '6. Creando Triggers';
+PRINT '5. Creando Triggers';
 GO
 
+-- Trigger para evitar la eliminacion de materiales si están referenciados en Detalle_Compra o Sillon
+
+CREATE TRIGGER LOS_GESTORES.MATERIAL_AD
+ON LOS_GESTORES.MATERIAL
+AFTER DELETE
+AS
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM LOS_GESTORES.DETALLE_COMPRA dc
+        JOIN deleted d ON dc.detalle_compra_material = d.material_id
+    )
+    BEGIN
+        RAISERROR ('No se puede eliminar el material porque está referenciado en DETALLE_COMPRA.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+
+    IF EXISTS (
+        SELECT 1
+        FROM LOS_GESTORES.SILLON s
+        JOIN deleted d ON s.sillon_madera = d.material_id OR s.sillon_tela = d.material_id OR s.sillon_relleno = d.material_id
+    )
+    BEGIN
+        RAISERROR ('No se puede eliminar el material porque está referenciado en SILLON.', 16, 1);
+        ROLLBACK TRANSACTION;
+    END
+END;
+GO
+
+/*
 -- Trigger para evitar la insercion si no hay material registrado
 
 CREATE TRIGGER LOS_GESTORES.DETALLE_COMPRA_AI
@@ -473,13 +488,14 @@ BEGIN
 END;
 
 GO
+*/
 
 PRINT 'Triggers implementadas correctamente.';
 GO
 
 -- Creacion de los Stored procedures
 
-PRINT '7. Creando Stored Procedures de migracion';
+PRINT '6. Creando Stored Procedures de migracion';
 GO
 
 CREATE PROCEDURE LOS_GESTORES.SP_PROVINCIA
@@ -555,22 +571,40 @@ BEGIN
 END;
 GO
 
-/*************** Materiales *********************/
+-- Materiales
+
+CREATE PROCEDURE LOS_GESTORES.SP_MATERIAL
+AS
+BEGIN
+    INSERT INTO LOS_GESTORES.Material
+        (material_tipo, material_nombre, material_descripcion, material_precio)
+    SELECT DISTINCT
+        Material_Tipo,
+        Material_Nombre,
+        Material_Descripcion,
+        Material_Precio
+    FROM gd_esquema.Maestra
+    WHERE Material_Tipo IS NOT NULL; 
+END;
+GO
 
 CREATE PROCEDURE LOS_GESTORES.SP_MADERA
 AS
 BEGIN
    INSERT INTO LOS_GESTORES.Madera
-    (madera_nombre
-    ,madera_descripcion
+    (madera_id
     ,madera_color
     ,madera_dureza
-    ,madera_precio
     )
-  SELECT distinct Material_Nombre, Material_Descripcion, MADERA_COLOR, MADERA_DUREZA, Material_Precio
-  FROM gd_esquema.Maestra
-  where Material_tipo = 'Madera'
-
+  SELECT
+    m.material_id,
+    t.MADERA_COLOR,
+    t.MADERA_DUREZA
+  FROM gd_esquema.Maestra t
+    JOIN LOS_GESTORES.Material m ON m.material_nombre = t.Material_Nombre
+        AND m.material_tipo = t.Material_Tipo
+  WHERE t.Material_tipo = 'Madera'
+  GROUP BY m.material_id, t.MADERA_COLOR, t.MADERA_DUREZA; 
 END;
 GO
 
@@ -578,15 +612,19 @@ CREATE PROCEDURE LOS_GESTORES.SP_TELA
 AS
 BEGIN
   INSERT INTO LOS_GESTORES.Tela
-    (tela_nombre
-    ,tela_descripcion
+    (tela_id
     ,tela_color
     ,tela_textura
-    ,tela_precio
     )
-  SELECT distinct Material_Nombre, Material_Descripcion, Tela_Color, Tela_Textura, Material_Precio
-  FROM gd_esquema.Maestra
-  where Material_tipo = 'Tela'
+  SELECT
+    m.material_id,
+    t.Tela_Color,
+    t.Tela_Textura
+  FROM gd_esquema.Maestra t
+    JOIN LOS_GESTORES.Material m ON m.material_nombre = t.Material_Nombre
+        AND m.material_tipo = t.Material_Tipo
+  WHERE t.Material_tipo = 'Tela'
+  GROUP BY m.material_id, t.Tela_Color, t.Tela_Textura;
 END;
 GO
 
@@ -595,14 +633,17 @@ AS
 BEGIN
   INSERT INTO LOS_GESTORES.Relleno
     (
-    relleno_nombre
-    ,relleno_descripcion
+    relleno_id
     ,relleno_densidad
-    ,relleno_precio
     )
-  SELECT distinct Material_Nombre, Material_Descripcion, Relleno_Densidad, Material_Precio
-  FROM gd_esquema.Maestra
-  where Material_tipo = 'Relleno'
+  SELECT
+    m.material_id,
+    t.Relleno_Densidad
+  FROM gd_esquema.Maestra t
+    JOIN LOS_GESTORES.Material m ON m.material_nombre = t.Material_Nombre
+        AND m.material_tipo = t.Material_Tipo
+  WHERE t.Material_tipo = 'Relleno'
+  GROUP BY m.material_id, t.Relleno_Densidad;
 END;
 GO
 
@@ -648,7 +689,6 @@ CREATE PROCEDURE LOS_GESTORES.SP_SILLON
 AS
 BEGIN
   SET NOCOUNT ON;
-
   INSERT INTO [LOS_GESTORES].[Sillon]
     ([sillon_codigo]
     ,[sillon_modelo_codigo]
@@ -661,7 +701,6 @@ BEGIN
     on m.Sillon_Medida_Alto = sm.sillon_medida_alto
       and m.Sillon_Medida_Ancho = sm.sillon_medida_ancho
       and m.Sillon_Medida_Profundidad = sm.sillon_medida_profundidad
-
   where Sillon_Codigo is not null
   group by Sillon_Codigo
 		  ,[Sillon_Modelo_Codigo]
@@ -671,30 +710,31 @@ BEGIN
 		  ,sm.sillon_medida_id
 		  ,sm.[Sillon_Medida_Alto]
 		  ,sm.[Sillon_Medida_Ancho]
-		  ,sm.[Sillon_Medida_Profundidad]
-
-
+		  ,sm.[Sillon_Medida_Profundidad];
+  -- Actualizar madera del sillón
   UPDATE t1
-	SET t1.sillon_madera = t2.madera_id
+	SET t1.sillon_madera = mtl.material_id
 	FROM LOS_GESTORES.sillon t1
-    JOIN gd_esquema.Maestra	m on m.Material_Tipo = 'Madera' and m.Sillon_Codigo = t1.sillon_codigo
-    JOIN LOS_GESTORES.madera t2 on m.Material_Nombre = t2.madera_nombre
+    JOIN gd_esquema.Maestra	m on m.Sillon_Codigo = t1.sillon_codigo AND m.Material_Tipo = 'Madera'
+    JOIN LOS_GESTORES.Material mtl ON m.Material_Nombre = mtl.material_nombre AND m.Material_Tipo = mtl.material_tipo;
 
+  -- Actualizar tela del sillón
   UPDATE t1
-	SET t1.sillon_tela = t2.tela_id
+	SET t1.sillon_tela = mtl.material_id
 	FROM LOS_GESTORES.sillon t1
-    JOIN gd_esquema.Maestra	m on m.Material_Tipo = 'Tela' and m.Sillon_Codigo = t1.sillon_codigo
-    JOIN LOS_GESTORES.tela t2 on m.Material_Nombre = t2.tela_nombre
+    JOIN gd_esquema.Maestra	m on m.Sillon_Codigo = t1.sillon_codigo AND m.Material_Tipo = 'Tela'
+    JOIN LOS_GESTORES.Material mtl ON m.Material_Nombre = mtl.material_nombre AND m.Material_Tipo = mtl.material_tipo;
 
+  -- Actualizar relleno del sillón
   UPDATE t1
-	SET t1.sillon_relleno = t2.relleno_id
+	SET t1.sillon_relleno = mtl.material_id
 	FROM LOS_GESTORES.sillon t1
-    JOIN gd_esquema.Maestra	m on m.Material_Tipo = 'Relleno' and m.Sillon_Codigo = t1.sillon_codigo
-    JOIN LOS_GESTORES.relleno t2 on m.Material_Nombre = t2.relleno_nombre
+    JOIN gd_esquema.Maestra	m on m.Sillon_Codigo = t1.sillon_codigo AND m.Material_Tipo = 'Relleno'
+    JOIN LOS_GESTORES.Material mtl ON m.Material_Nombre = mtl.material_nombre AND m.Material_Tipo = mtl.material_tipo;
 END;
 GO
 
-/************* Compras ********************/
+-- Compra
 
 CREATE PROCEDURE LOS_GESTORES.SP_PROVEEDOR
 AS
@@ -758,31 +798,27 @@ BEGIN
   --	SET NOCOUNT ON;
   INSERT INTO [LOS_GESTORES].[Detalle_Compra]
     ([detalle_compra_numero]
-    ,[detalle_compra_tipo]
-    ,[detalle_compra_material]
+    ,[detalle_compra_material] 
     ,[detalle_compra_precio]
     ,[detalle_compra_cantidad])
-  SELECT
+  SELECT DISTINCT
     m.[Compra_Numero]
-		  , m.Material_Tipo
-		  , ma.material_id
+		  , mat.material_id 
 		  , m.[Detalle_Compra_Precio]
 		  , m.[Detalle_Compra_Cantidad]
   FROM [gd_esquema].[Maestra] m
-    join LOS_GESTORES.material ma on m.Material_Nombre = ma.material_nombre
-      and m.Material_Tipo = ma.material_tipo
+    JOIN LOS_GESTORES.Material mat ON m.Material_Nombre = mat.material_nombre
+      AND m.Material_Tipo = mat.material_tipo 
   where m.COMPRA_NUMERO IS NOT NULL
-
+  AND m.Material_Nombre IS NOT NULL; 
 END;
 GO
 
-/**************** Cliente ************/
+-- Cliente
 
 CREATE PROCEDURE LOS_GESTORES.SP_CLIENTE
 AS
 BEGIN
-
-
   INSERT INTO LOS_GESTORES.CLIENTE
     (
     cliente_dni,
@@ -813,7 +849,7 @@ BEGIN
 END;
 GO
 
-/**************** Pedidos ************/
+-- Pedido
 
 CREATE PROCEDURE LOS_GESTORES.SP_PEDIDO
 AS
@@ -866,7 +902,7 @@ BEGIN
 END;
 GO
 
-/************* Facturas **************/
+-- Factura
 
 CREATE PROCEDURE LOS_GESTORES.SP_FACTURA
 AS
@@ -936,27 +972,28 @@ PRINT 'Stored Procedures de migracion creados correctamente.';
 
 -- Ejecutar Stored procedures
 
-PRINT '8. Ejecutando Stored Procedures de migracion de datos';
+PRINT '7. Ejecutando Stored Procedures de migracion de datos';
 GO
 
-EXEC LOS_GESTORES.SP_PROVINCIA
-EXEC LOS_GESTORES.SP_LOCALIDAD
-EXEC LOS_GESTORES.SP_SUCURSAL
-EXEC LOS_GESTORES.SP_MADERA
-EXEC LOS_GESTORES.SP_TELA
-EXEC LOS_GESTORES.SP_RELLENO
-EXEC LOS_GESTORES.SP_SILLON_MEDIDA
-EXEC LOS_GESTORES.SP_SILLON_MODELO
-EXEC LOS_GESTORES.SP_SILLON
-EXEC LOS_GESTORES.SP_PROVEEDOR
-EXEC LOS_GESTORES.SP_COMPRA
-EXEC LOS_GESTORES.SP_DETALLE_COMPRA
-EXEC LOS_GESTORES.SP_CLIENTE
-EXEC LOS_GESTORES.SP_PEDIDO
-EXEC LOS_GESTORES.SP_DETALLE_PEDIDO
-EXEC LOS_GESTORES.SP_FACTURA
-EXEC LOS_GESTORES.SP_DETALLE_FACTURA
-EXEC LOS_GESTORES.SP_ENVIO
+EXEC LOS_GESTORES.SP_PROVINCIA;
+EXEC LOS_GESTORES.SP_LOCALIDAD;
+EXEC LOS_GESTORES.SP_SUCURSAL;
+EXEC LOS_GESTORES.SP_MATERIAL; 
+EXEC LOS_GESTORES.SP_MADERA;
+EXEC LOS_GESTORES.SP_TELA;
+EXEC LOS_GESTORES.SP_RELLENO;
+EXEC LOS_GESTORES.SP_SILLON_MEDIDA;
+EXEC LOS_GESTORES.SP_SILLON_MODELO;
+EXEC LOS_GESTORES.SP_SILLON;
+EXEC LOS_GESTORES.SP_PROVEEDOR;
+EXEC LOS_GESTORES.SP_COMPRA;
+EXEC LOS_GESTORES.SP_DETALLE_COMPRA;
+EXEC LOS_GESTORES.SP_CLIENTE;
+EXEC LOS_GESTORES.SP_PEDIDO;
+EXEC LOS_GESTORES.SP_DETALLE_PEDIDO;
+EXEC LOS_GESTORES.SP_FACTURA;
+EXEC LOS_GESTORES.SP_DETALLE_FACTURA;
+EXEC LOS_GESTORES.SP_ENVIO;
 GO
 
 PRINT 'Migracion de datos inicial completada.';
