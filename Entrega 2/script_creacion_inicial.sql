@@ -381,7 +381,7 @@ PRINT '5. Creando Triggers';
 GO
 
 -- Trigger para evitar la eliminacion de materiales si están referenciados en Detalle_Compra o Sillon
-
+/*
 CREATE TRIGGER LOS_GESTORES.MATERIAL_AD
 ON LOS_GESTORES.MATERIAL
 AFTER DELETE
@@ -408,7 +408,7 @@ BEGIN
     END
 END;
 GO
-
+*/
 /*
 -- Trigger para evitar la insercion si no hay material registrado
 
@@ -937,8 +937,8 @@ BEGIN
     ,[detalle_factura_precio])
   SELECT
     [Factura_Numero]
-		  , [Detalle_Factura_Precio]
-		  , [Detalle_Factura_Cantidad]
+	, [Detalle_Factura_Cantidad]
+	, [Detalle_Factura_Precio]
   FROM [GD1C2025].[gd_esquema].[Maestra]
   where Factura_Numero is not null
     and Detalle_Factura_Cantidad is not null
