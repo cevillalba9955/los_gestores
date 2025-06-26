@@ -46,25 +46,27 @@ BEGIN
 END
 GO
 
+
 CREATE FUNCTION BI.getTurnoVenta (@fechaHora DATETIME)
-RETURNS NVARCHAR(20)
+RETURNS INT
 AS
 BEGIN
     DECLARE @hora INT
-    DECLARE @turno NVARCHAR(20)
+    DECLARE @turno INT
 
     SET @hora = DATEPART(HOUR, @fechaHora)
 
     SET @turno = 
         CASE 
-            WHEN @hora >= 8 AND @hora < 14 THEN '08:00-14:00'
-            WHEN @hora >= 14 AND @hora < 20 THEN '14:00-20:00'
-            ELSE 'Fuera de turno'
+            WHEN @hora >= 8 AND @hora < 14 THEN 1
+            WHEN @hora >= 14 AND @hora < 20 THEN 2
+            ELSE 0
         END
 
     RETURN @turno
 END
 GO
+
 
 PRINT 'Funciones BI creadas.';
 GO
