@@ -112,13 +112,13 @@ CREATE TABLE LOS_GESTORES.BI_tiempo (
 GO
 
 CREATE TABLE LOS_GESTORES.BI_turno (
-    id_turno INT IDENTITY(1,1) PRIMARY KEY,
+    id_turno INT PRIMARY KEY,
     descripcion_turno NVARCHAR(20)
 );
 GO
 
 CREATE TABLE LOS_GESTORES.BI_estado_pedido (
-    id_estado INT IDENTITY(1,1) PRIMARY KEY,
+    id_estado INT PRIMARY KEY,
     estado NVARCHAR(255)
 );
 GO
@@ -151,7 +151,7 @@ JOIN LOS_GESTORES.Provincia p ON l.localidad_provincia = p.provincia_id;
 
 GO
 
-INSERT INTO BI.dm_cliente (
+INSERT INTO LOS_GESTORES.BI_cliente(
     id_cliente, nombre, apellido, fecha_nacimiento, id_ubicacion
 )
 SELECT
@@ -163,94 +163,74 @@ SELECT
 FROM LOS_GESTORES.Cliente c
 GO
 
-INSERT INTO BI.dm_proveedor (
-    id_proveedor, nombre, direccion, telefono, mail, id_ubicacion
+INSERT INTO LOS_GESTORES.BI_proveedor (
+    id_proveedor, nombre, id_ubicacion
 )
 SELECT
     p.proveedor_id,
-    p.proveedor_razonSocial, -- VER
-    p.proveedor_direccion,
-    p.proveedor_telefono,
-    p.proveedor_mail,
-    u.id_ubicacion
+    p.proveedor_razonSocial, 
+    P.proveedor_localidad
 FROM LOS_GESTORES.Proveedor p
-JOIN LOS_GESTORES.Localidad l ON p.proveedor_localidad = l.localidad_id
-JOIN LOS_GESTORES.Provincia pr ON l.localidad_provincia = pr.provincia_id
-JOIN BI.dm_ubicacion u
-    ON u.localidad = l.localidad_descripcion AND u.provincia = pr.provincia_descripcion;
 GO
 
-INSERT INTO BI.dm_sucursal (
-    id_sucursal, direccion, telefono, mail, id_ubicacion
+
+INSERT INTO LOS_GESTORES.BI_sucursal(
+    id_sucursal, id_ubicacion
 )
 SELECT
     s.sucursal_nroSucursal,
-    s.sucursal_direccion,
-    s.sucursal_telefono,
-    s.sucursal_mail,
-    u.id_ubicacion
+	S.sucursal_localidad
 FROM LOS_GESTORES.Sucursal s
-JOIN LOS_GESTORES.Localidad l ON s.sucursal_localidad = l.localidad_id
-JOIN LOS_GESTORES.Provincia pr ON l.localidad_provincia = pr.provincia_id
-JOIN BI.dm_ubicacion u
-    ON u.localidad = l.localidad_descripcion AND u.provincia = pr.provincia_descripcion;
+GO
+
+INSERT INTO LOS_GESTORES.BI_tiempo(ID_TIEMPO,anio,mes)
+SELECT  FORMAT(MIN(PEDIDO_FECHA),'yyyyMM') , YEAR(pedido_fecha), MONTH(pedido_fecha)
+FROM LOS_GESTORES.Pedido
+GROUP BY YEAR(pedido_fecha), MONTH(pedido_fecha)
+ORDER BY 1,2
 
 GO
 
-INSERT INTO BI.dm_tiempo (fecha, anio, cuatrimestre, mes)
-SELECT DISTINCT
-    f.fecha,
-    YEAR(f.fecha),
-    BI.getCuatrimestre(f.fecha),
-    MONTH(f.fecha)
-FROM (
-    SELECT CAST(pedido_fecha AS DATE) AS fecha FROM LOS_GESTORES.Pedido
-    UNION
-    SELECT CAST(factura_fecha AS DATE) FROM LOS_GESTORES.Factura
-    UNION
-    SELECT CAST(compra_fecha AS DATE) FROM LOS_GESTORES.Compra
-    UNION
-    SELECT CAST(envio_fecha_programada AS DATE) FROM LOS_GESTORES.Envio
-    UNION
-    SELECT CAST(envio_fecha AS DATE) FROM LOS_GESTORES.Envio WHERE envio_fecha IS NOT NULL
-) AS f;
+INSERT INTO LOS_GESTORES.BI_turno(ID_TURNO,descripcion_turno)VALUES(1,'08:00-14:00')
+INSERT INTO LOS_GESTORES.BI_turno(ID_TURNO,descripcion_turno)VALUES(2,'14:00-20:00')
+INSERT INTO LOS_GESTORES.BI_turno(ID_TURNO,descripcion_turno)VALUES(0,'Fuera de turno')
+GO 
+
+INSERT INTO LOS_GESTORES.BI_estado_pedido(id_estado,estado) VALUES (1,'PENDIENTE')
+INSERT INTO LOS_GESTORES.BI_estado_pedido(id_estado,estado) VALUES (2,'ENTREGADO')
+INSERT INTO LOS_GESTORES.BI_estado_pedido(id_estado,estado) VALUES (3,'CANCELADO')
 GO
 
-INSERT INTO BI.dm_turno (descripcion_turno)
-SELECT DISTINCT
-    BI.getTurnoVenta(f.fecha_hora)
-FROM (
-    SELECT CAST(pedido_fecha AS DATETIME) AS fecha_hora FROM LOS_GESTORES.Pedido
-    UNION
-    SELECT CAST(factura_fecha AS DATETIME) FROM LOS_GESTORES.Factura
-) AS f;
+
+
+INSERT INTO LOS_GESTORES.BI_material (id_material, tipo_material) VALUES (1,'Madera')
+INSERT INTO LOS_GESTORES.BI_material (id_material, tipo_material) VALUES (2,'Tela')
+INSERT INTO LOS_GESTORES.BI_material (id_material, tipo_material) VALUES (3,'Relleno')
 GO
 
-INSERT INTO BI.dm_estado_pedido (estado)
-SELECT DISTINCT pedido_estado FROM LOS_GESTORES.Pedido;
-GO
 
-INSERT INTO BI.dm_material (id_material, tipo_material, nombre_material, descripcion, precio)
+INSERT INTO LOS_GESTORES.BI_modelo(id_modelo, modelo_nombre)
 SELECT
-    material_id,
-    material_tipo,
-    material_nombre,
-    material_descripcion,
-    material_precio
-FROM LOS_GESTORES.Material;
-GO
-
-INSERT INTO BI.dm_modelo (id_modelo, modelo_nombre, modelo_descripcion, modelo_precio)
-SELECT DISTINCT
     sm.sillon_modelo_codigo,
-    sm.sillon_modelo,
-    sm.sillon_modelo_descripcion,
-    sm.sillon_modelo_precio
-FROM LOS_GESTORES.Sillon_Modelo sm;
+    sm.sillon_modelo
+	FROM LOS_GESTORES.Sillon_Modelo sm;
 GO
 
 PRINT '4. Creando tablas de hechos';
 GO
+
+CREATE TABLE LOS_GESTORES.BI_HECHO_FACTURA
+(
+    id_sucursal BIGINT, 
+    id_tiempo NVARCHAR(6),
+	TOTAL decimal(38, 2),
+    CONSTRAINT FK_BI_factura_sucursal FOREIGN KEY (id_sucursal) REFERENCES LOS_GESTORES.BI_SUCURSAL (id_sucursal),
+    CONSTRAINT FK_BI_factura_tiempo FOREIGN KEY (id_tiempo) REFERENCES LOS_GESTORES.BI_TIEMPO(id_tiempo)
+) 
+GO
+
+
+
 
 CREATE TABLE BI.ft_envio (
     id_envio DECIMAL(18,0) PRIMARY KEY, 
@@ -330,6 +310,16 @@ GO
 
 PRINT '5. Insertando datos en tablas de hechos';
 GO
+
+INSERT INTO LOS_GESTORES.BI_HECHO_FACTURA(id_sucursal,id_tiempo,TOTAL)
+ SELECT FACTURA_SUCURSAL 
+	,FORMAT(FACTURA_FECHA,'yyyyMM')
+	,SUM(FACTURA_TOTAL) 
+ FROM LOS_GESTORES.FACTURA
+ GROUP BY
+	 FACTURA_SUCURSAL
+	,FORMAT(FACTURA_FECHA,'yyyyMM')
+
 
 INSERT INTO BI.ft_envio (id_tiempo, id_cliente, id_pedido, id_sucursal, fecha_envio_programada, fecha_envio_real, costo_envio, cumplimiento_en_tiempo)
 SELECT
