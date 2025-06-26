@@ -72,85 +72,66 @@ GO
 PRINT '2. Creando tablas de dimensiones';
 GO
 
-CREATE TABLE BI.dm_ubicacion (
-    id_ubicacion INT IDENTITY(1,1) PRIMARY KEY,
+CREATE TABLE LOS_GESTORES.BI_ubicacion (
+    id_ubicacion INT PRIMARY KEY,
     localidad NVARCHAR(100),
     provincia NVARCHAR(100)
 );
 GO
 
-CREATE TABLE BI.dm_cliente (
+CREATE TABLE LOS_GESTORES.BI_cliente (
     id_cliente INT PRIMARY KEY,
     nombre NVARCHAR(100),
     apellido NVARCHAR(100),
     fecha_nacimiento DATE,
-    direccion NVARCHAR(150),
-    telefono NVARCHAR(20),
-    mail NVARCHAR(100),
-    edad INT,
-    rango_etario NVARCHAR(6),
     id_ubicacion INT,
-    CONSTRAINT FK_dm_cliente_ubicacion FOREIGN KEY (id_ubicacion) REFERENCES BI.dm_ubicacion(id_ubicacion)
+    CONSTRAINT FK_dm_cliente_ubicacion FOREIGN KEY (id_ubicacion) REFERENCES LOS_GESTORES.BI_ubicacion(id_ubicacion)
 );
 GO
 
-CREATE TABLE BI.dm_proveedor (
+CREATE TABLE LOS_GESTORES.BI_proveedor (
     id_proveedor BIGINT PRIMARY KEY, 
     nombre NVARCHAR(255),
-    direccion NVARCHAR(150),
-    telefono NVARCHAR(20),
-    mail NVARCHAR(100),
     id_ubicacion INT,
-    CONSTRAINT FK_dm_proveedor_ubicacion FOREIGN KEY (id_ubicacion) REFERENCES BI.dm_ubicacion(id_ubicacion)
+    CONSTRAINT FK_dm_proveedor_ubicacion FOREIGN KEY (id_ubicacion) REFERENCES LOS_GESTORES.BI_ubicacion(id_ubicacion)
 );
 GO
 
-CREATE TABLE BI.dm_sucursal (
+CREATE TABLE LOS_GESTORES.BI_sucursal (
     id_sucursal BIGINT PRIMARY KEY, 
-    direccion NVARCHAR(255),
-    telefono NVARCHAR(255), 
-    mail NVARCHAR(255),
     id_ubicacion INT,
-    CONSTRAINT FK_dm_sucursal_ubicacion FOREIGN KEY (id_ubicacion) REFERENCES BI.dm_ubicacion(id_ubicacion)
+    CONSTRAINT FK_dm_sucursal_ubicacion FOREIGN KEY (id_ubicacion) REFERENCES LOS_GESTORES.BI_ubicacion(id_ubicacion)
 );
 GO
 
-CREATE TABLE BI.dm_tiempo (
-    id_tiempo INT IDENTITY(1,1) PRIMARY KEY,
-    fecha DATE,
+CREATE TABLE LOS_GESTORES.BI_tiempo (
+    id_tiempo NVARCHAR(6) PRIMARY KEY,
     anio INT,
-    cuatrimestre INT,
     mes INT
 );
 GO
 
-CREATE TABLE BI.dm_turno (
+CREATE TABLE LOS_GESTORES.BI_turno (
     id_turno INT IDENTITY(1,1) PRIMARY KEY,
     descripcion_turno NVARCHAR(20)
 );
 GO
 
-CREATE TABLE BI.dm_estado_pedido (
+CREATE TABLE LOS_GESTORES.BI_estado_pedido (
     id_estado INT IDENTITY(1,1) PRIMARY KEY,
     estado NVARCHAR(255)
 );
 GO
 
-CREATE TABLE BI.dm_material (
+CREATE TABLE LOS_GESTORES.BI_material (
     id_material BIGINT PRIMARY KEY, 
-    tipo_material NVARCHAR(255),
-    nombre_material NVARCHAR(255), 
-    descripcion NVARCHAR(255),
-    precio DECIMAL(38,2) 
-	-- uso_material NVARCHAR(20)  
+    tipo_material NVARCHAR(255)
 );
 GO
 
-CREATE TABLE BI.dm_modelo (
+CREATE TABLE LOS_GESTORES.BI_modelo (
     id_modelo BIGINT PRIMARY KEY, 
-    modelo_nombre NVARCHAR(255), 
-    modelo_descripcion NVARCHAR(255),
-    modelo_precio DECIMAL(18, 2) 
+    modelo_nombre NVARCHAR(255)
 );
 GO
 
@@ -160,34 +141,26 @@ GO
 PRINT '3. Insertando datos en dimensiones';
 GO
 
-INSERT INTO BI.dm_ubicacion (localidad, provincia)
+INSERT INTO LOS_GESTORES.BI_ubicacion(id_ubicacion,localidad, provincia)
 SELECT DISTINCT
+	l.localidad_id,
     l.localidad_descripcion,
     p.provincia_descripcion
 FROM LOS_GESTORES.Localidad l
 JOIN LOS_GESTORES.Provincia p ON l.localidad_provincia = p.provincia_id;
+
 GO
 
 INSERT INTO BI.dm_cliente (
-    id_cliente, nombre, apellido, fecha_nacimiento, direccion,
-    telefono, mail, edad, rango_etario, id_ubicacion
+    id_cliente, nombre, apellido, fecha_nacimiento, id_ubicacion
 )
 SELECT
     c.cliente_id,
     c.cliente_nombre,
     c.cliente_apellido,
     c.cliente_fechanacimiento,
-    c.cliente_direccion,
-    c.cliente_telefono,
-    c.cliente_mail,
-    DATEDIFF(YEAR, c.cliente_fechanacimiento, GETDATE()), -- Edad calculada en el momento de la migración
-    BI.getRangoEtario(c.cliente_fechanacimiento),
-    u.id_ubicacion
+    c.cliente_localidad
 FROM LOS_GESTORES.Cliente c
-JOIN LOS_GESTORES.Localidad l ON c.cliente_localidad = l.localidad_id
-JOIN LOS_GESTORES.Provincia p ON l.localidad_provincia = p.provincia_id
-JOIN BI.dm_ubicacion u
-    ON u.localidad = l.localidad_descripcion AND u.provincia = p.provincia_descripcion;
 GO
 
 INSERT INTO BI.dm_proveedor (
