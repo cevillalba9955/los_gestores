@@ -2,140 +2,6 @@ USE [GD1C2025]
 GO
 
 
-CREATE FUNCTION LOS_GESTORES.BI_GetTiempoID(@FECHA DATE)
- RETURNS NVARCHAR(6) AS BEGIN
-    RETURN FORMAT(@FECHA,'yyyyMM')
-END
-GO
-
-CREATE FUNCTION LOS_GESTORES.BI_getCuatrimestre (@MES INT)
-RETURNS SMALLINT
-AS BEGIN
-    RETURN FLOOR((@MES + 3)/4)
-END
-GO
-
-create FUNCTION LOS_GESTORES.BI_getEstadoPedidoId(@Estado NVARCHAR(255))
-RETURNS SMALLINT
-AS BEGIN
-    DECLARE @ID_Estado SMALLINT
-
-    SET @ID_Estado =
-		CASE 
-			WHEN @Estado = 'PENDIENTE' THEN 1
-			WHEN @Estado = 'ENTREGADO' THEN 2
-			WHEN @Estado = 'CANCELADO' THEN 3
-            ELSE 0
-		END
-
-    RETURN @ID_Estado
-END
-GO
-
-
-CREATE FUNCTION LOS_GESTORES.BI_getMATERIALId(@material NVARCHAR(255))
-RETURNS SMALLINT
-AS BEGIN
-    DECLARE @ID_material SMALLINT
-
-    SET @ID_material =
-		CASE 
-			WHEN @material = 'Madera' THEN 1
-			WHEN @material = 'Tela' THEN 2
-			WHEN @material = 'Relleno' THEN 3
-            ELSE 0
-		END
-
-    RETURN @ID_material
-END
-GO
-
-
-CREATE FUNCTION LOS_GESTORES.BI_getTurnoVenta (@fechaHora DATETIME)
-RETURNS INT
-AS
-BEGIN
-    DECLARE @hora INT
-    DECLARE @turno NVARCHAR(20)
-
-    SET @hora = DATEPART(HOUR, @fechaHora)
-
-    SET @turno = 
-        CASE 
-            WHEN @hora >= 8 AND @hora < 14 THEN 1
-            WHEN @hora >= 14 AND @hora < 20 THEN 2
-            ELSE 0
-        END
-
-    RETURN @turno
-END
-GO
-
-
-
-
-CREATE FUNCTION BI.getRangoEtario (@fechaNacimiento DATE)
-RETURNS NVARCHAR(6)
-AS
-BEGIN
-    DECLARE @EdadActual INT
-    DECLARE @rango NVARCHAR(6)
-
-    SET @EdadActual = CAST(DATEDIFF(DAY, @fechaNacimiento, GETDATE()) / 365.25 AS INT)
-
-    SET @rango =
-		CASE 
-			WHEN @EdadActual < 25 THEN '<25'
-			WHEN @EdadActual >= 25 AND @EdadActual < 35 THEN '25-35'
-			WHEN @EdadActual >= 35 AND @EdadActual < 50 THEN '35-50'
-			WHEN @EdadActual >= 50 THEN '>50'
-		END
-
-    RETURN @rango
-END
-GO
-
-
-
-
-
-GO
-CREATE FUNCTION LOS_GESTORES.BI.getModeloTopVentas (@anio INT, @CUATRIMESTRE INT, @RANGO NVARCHAR(6), @LOCALIDAD INT, @POSICION INT)
-RETURNS BIGINT
-AS
-BEGIN
-
-    DECLARE @MODELO BIGINT
-    DECLARE TOPVENTAS CURSOR FOR
-	SELECT TOP 3
-        SILLON_MODELO
-    FROM BI.VENTAS_POR_MODELO
-    WHERE ANIO = @ANIO
-        AND CUATRIMESTRE = @CUATRIMESTRE
-        AND RANGO_ETAREO = @RANGO
-        AND SUCURSAL_LOCALIDAD = @LOCALIDAD
-    GROUP BY SILLON_MODELO
-    ORDER BY SUM(TOTAL_VENTAS) DESC
-
-
-    OPEN TOPVENTAS
-    WHILE (@POSICION>0)
-	BEGIN
-        FETCH NEXT FROM TOPVENTAS INTO @MODELO
-        SET @POSICION = @POSICION -1
-    END
-
-    CLOSE TOPVENTAS
-    DEALLOCATE TOPVENTAS
-    RETURN @MODELO
-END
-GO
-
-
-
-
-PRINT 'Funciones BI creadas.';
-GO
 
 PRINT '2. Creando tablas de dimensiones';
 GO
@@ -412,10 +278,134 @@ CREATE TABLE LOS_GESTORES.BI_HECHO_ENVIO
 GO
 
 
+CREATE FUNCTION LOS_GESTORES.BI_GetTiempoID(@FECHA DATE)
+ RETURNS NVARCHAR(6) AS BEGIN
+    RETURN FORMAT(@FECHA,'yyyyMM')
+END
+GO
+
+CREATE FUNCTION LOS_GESTORES.BI_getCuatrimestre (@MES INT)
+RETURNS SMALLINT
+AS BEGIN
+    RETURN FLOOR((@MES + 3)/4)
+END
+GO
+
+create FUNCTION LOS_GESTORES.BI_getEstadoPedidoId(@Estado NVARCHAR(255))
+RETURNS SMALLINT
+AS BEGIN
+    DECLARE @ID_Estado SMALLINT
+
+    SET @ID_Estado =
+		CASE 
+			WHEN @Estado = 'PENDIENTE' THEN 1
+			WHEN @Estado = 'ENTREGADO' THEN 2
+			WHEN @Estado = 'CANCELADO' THEN 3
+            ELSE 0
+		END
+
+    RETURN @ID_Estado
+END
+GO
+
+
+CREATE FUNCTION LOS_GESTORES.BI_getMATERIALId(@material NVARCHAR(255))
+RETURNS SMALLINT
+AS BEGIN
+    DECLARE @ID_material SMALLINT
+
+    SET @ID_material =
+		CASE 
+			WHEN @material = 'Madera' THEN 1
+			WHEN @material = 'Tela' THEN 2
+			WHEN @material = 'Relleno' THEN 3
+            ELSE 0
+		END
+
+    RETURN @ID_material
+END
+GO
+
+
+CREATE FUNCTION LOS_GESTORES.BI_getTurnoVenta (@fechaHora DATETIME)
+RETURNS INT
+AS
+BEGIN
+    DECLARE @hora INT
+    DECLARE @turno NVARCHAR(20)
+
+    SET @hora = DATEPART(HOUR, @fechaHora)
+
+    SET @turno = 
+        CASE 
+            WHEN @hora >= 8 AND @hora < 14 THEN 1
+            WHEN @hora >= 14 AND @hora < 20 THEN 2
+            ELSE 0
+        END
+
+    RETURN @turno
+END
+GO
+
+
+CREATE FUNCTION LOS_GESTORES.BI_getRangoEtario (@fechaNacimiento DATE, @ANIO INT , @MES INT)
+RETURNS NVARCHAR(6)
+AS
+BEGIN
+    DECLARE @EdadActual INT
+    DECLARE @RANGO NVARCHAR(6)
+
+    SET @EdadActual = CASE WHEN MONTH(@fechaNacimiento) > @MES THEN -1 ELSE 0 END 
+
+    SET @EdadActual = @EdadActual + @ANIO - YEAR(@fechaNacimiento)
+
+    SET @rango =
+		CASE 
+			WHEN @EdadActual < 25 THEN '<25'
+			WHEN @EdadActual < 35 THEN '25-35'
+			WHEN @EdadActual < 50 THEN '35-50'
+			ELSE '>50'
+		END
+
+    RETURN @rango
+END
+GO
 
 
 
+CREATE FUNCTION LOS_GESTORES.BI.getModeloTopVentas (@anio INT, @CUATRIMESTRE INT, @RANGO NVARCHAR(6), @LOCALIDAD INT, @POSICION INT)
+RETURNS BIGINT
+AS
+BEGIN
 
+    DECLARE @MODELO BIGINT
+    DECLARE TOPVENTAS CURSOR FOR
+	SELECT TOP 3
+        SILLON_MODELO
+    FROM BI.VENTAS_POR_MODELO
+    WHERE ANIO = @ANIO
+        AND CUATRIMESTRE = @CUATRIMESTRE
+        AND RANGO_ETAREO = @RANGO
+        AND SUCURSAL_LOCALIDAD = @LOCALIDAD
+    GROUP BY SILLON_MODELO
+    ORDER BY SUM(TOTAL_VENTAS) DESC
+
+
+    OPEN TOPVENTAS
+    WHILE (@POSICION>0)
+	BEGIN
+        FETCH NEXT FROM TOPVENTAS INTO @MODELO
+        SET @POSICION = @POSICION -1
+    END
+
+    CLOSE TOPVENTAS
+    DEALLOCATE TOPVENTAS
+    RETURN @MODELO
+END
+GO
+
+PRINT 'Funciones BI creadas.';
+GO
 
 
 PRINT '5. Insertando datos en tablas de hechos';
@@ -607,141 +597,76 @@ AS
 GO
 
 -- 4. Volumen de pedidos
-CREATE VIEW BI.vw_volumen_pedidos_por_turno_sucursal_mes_anio
+
+
+CREATE VIEW LOS_GESTORES.BI_V04_volumen_pedidos_por_turno_sucursal_mes_anio
 AS
-    SELECT
-        t.anio,
-        t.mes,
-        tu.descripcion_turno,
-        s.direccion AS sucursal_direccion,
-        COUNT(DISTINCT fp.id_pedido_encabezado) AS cantidad_pedidos
-    FROM BI.ft_pedido fp
-        JOIN BI.dm_tiempo t ON fp.id_tiempo = t.id_tiempo
-        JOIN BI.dm_turno tu ON fp.id_turno = tu.id_turno
-        JOIN BI.dm_sucursal s ON fp.id_sucursal = s.id_sucursal
-    GROUP BY t.anio, t.mes, tu.descripcion_turno, s.direccion
-    ORDER BY t.anio, t.mes, tu.descripcion_turno, s.direccion;
+SELECT ID_SUCURSAL
+    ,T.ANIO
+    ,T.MES
+    ,TU.descripcion_turno
+    ,SUM(CANTIDAD) CANTIDAD_PEDIDOS
+FROM LOS_GESTORES.BI_HECHO_PEDIDO P
+JOIN LOS_GESTORES.BI_TIEMPO T ON P.ID_TIEMPO = T.ID_TIEMPO 
+JOIN LOS_GESTORES.BI_TURNO TU ON P.ID_TURNO = TU.ID_TURNO
+GROUP BY ID_SUCURSAL
+    ,T.ANIO
+    ,T.MES
+    ,TU.descripcion_turno
+
 GO
 
 -- 5. Conversi�n de pedidos
-CREATE VIEW BI.vw_conversion_pedidos_por_estado_cuatrimestre_sucursal
+CREATE VIEW LOS_GESTORES.BI_V05_conversion_pedidos_por_estado_cuatrimestre_sucursal
 AS
-    SELECT
-        t.anio,
-        t.cuatrimestre,
-        s.direccion AS sucursal_direccion,
-        ep.estado AS estado_pedido,
-        COUNT(DISTINCT fp.id_pedido_encabezado) AS total_pedidos_estado,
-        CAST(COUNT(DISTINCT fp.id_pedido_encabezado) AS DECIMAL(18,2)) * 100.0 /
-        (SELECT COUNT(DISTINCT fp2.id_pedido_encabezado)
-        FROM BI.ft_pedido fp2
-            JOIN BI.dm_tiempo t2 ON fp2.id_tiempo = t2.id_tiempo
-            JOIN BI.dm_sucursal s2 ON fp2.id_sucursal = s2.id_sucursal
-        WHERE t2.anio = t.anio AND t2.cuatrimestre = t.cuatrimestre AND s2.id_sucursal = s.id_sucursal) AS porcentaje_conversion
-    FROM BI.ft_pedido fp
-        JOIN BI.dm_tiempo t ON fp.id_tiempo = t.id_tiempo
-        JOIN BI.dm_sucursal s ON fp.id_sucursal = s.id_sucursal
-        JOIN BI.dm_estado_pedido ep ON fp.id_estado = ep.id_estado
-    GROUP BY t.anio, t.cuatrimestre, s.direccion, s.id_sucursal, ep.estado
-    ORDER BY t.anio, t.cuatrimestre, s.direccion, ep.estado;
+    SELECT T.ANIO,
+    LOS_GESTORES.BI_GETCUATRIMESTRE(T.MES) CUATRIMESTE,
+    P.ID_SUCURSAL,
+    E.Estado,
+	100 * SUM(P.CANTIDAD) /
+	(SELECT SUM(P1.CANTIDAD) 
+    FROM LOS_GESTORES.BI_HECHO_PEDIDO P1
+    JOIN LOS_GESTORES.BI_ESTADO_pedido E1 ON P1.ID_Estado = E1.ID_Estado
+    JOIN LOS_GESTORES.BI_TIEMPO T1 ON P1.ID_TIEMPO = T1.ID_TIEMPO
+		WHERE  T1.ANIO = T.ANIO
+		AND LOS_GESTORES.BI_GETCUATRIMESTRE(T1.MES)= LOS_GESTORES.BI_GETCUATRIMESTRE(T.MES) 
+		AND P1.ID_SUCURSAL = P.ID_SUCURSAL) PORCENTAJE
+    
+    FROM LOS_GESTORES.BI_HECHO_PEDIDO P
+    JOIN LOS_GESTORES.BI_ESTADO_pedido E ON P.ID_Estado = E.ID_Estado
+    JOIN LOS_GESTORES.BI_TIEMPO T ON P.ID_TIEMPO = T.ID_TIEMPO
+    GROUP BY T.ANIO,
+    LOS_GESTORES.BI_GETCUATRIMESTRE(T.MES),
+    P.ID_SUCURSAL,
+    E.Estado
+
+
 GO
 
 -- 6. Tiempo promedio de fabricaci�n
-CREATE VIEW BI.vw_tiempo_promedio_fabricacion_sucursal_cuatrimestre
+CREATE VIEW LOS_GESTORES.BI_V06_tiempo_promedio_fabricacion_sucursal_cuatrimestre
 AS
-    SELECT
-        t.anio,
-        t.cuatrimestre,
-        s.direccion AS sucursal_direccion,
-        AVG(f.tiempo_fabricacion) AS tiempo_promedio_fabricacion_dias
-    FROM BI.ft_factura f
-        JOIN BI.dm_tiempo t ON f.id_tiempo = t.id_tiempo
-        JOIN BI.dm_sucursal s ON f.id_sucursal = s.id_sucursal
-    WHERE f.tiempo_fabricacion IS NOT NULL
-    GROUP BY t.anio, t.cuatrimestre, s.direccion
-    ORDER BY t.anio, t.cuatrimestre, s.direccion;
-
-CREATE VIEW LOS_GESTORES.VW_PEDIDOS_POR_TURNO
-AS
-    SELECT
-        t.anio,
-        t.mes,
-        p.id_sucursal,
-        p.id_turno,
-        SUM(p.cantidad) AS pedidos
-    FROM LOS_GESTORES.BI_HECHO_PEDIDOS p
-        JOIN LOS_GESTORES.BI_TIEMPO t ON t.id_tiempo = FORMAT(p.pedido_fecha, 'yyyyMM')
-    GROUP BY 
-    t.anio,
-    t.mes,
-    p.id_sucursal,
-    p.id_turno;
-GO
-
-
-
-
-
--- 5. Conversi�n de pedidos
-CREATE VIEW LOS_GESTORES.VW_CONVERSION_PEDIDOS
-AS
-    SELECT
-        t.anio,
-        FLOOR((t.mes + 3) / 4) AS cuatrimestre,
-        p.id_sucursal,
-        p.estado_pedido,
-        CAST(
-        100.0 * SUM(p.cantidad) / (
-            SELECT SUM(p2.cantidad)
-        FROM LOS_GESTORES.BI_HECHO_PEDIDOS p2
-            JOIN LOS_GESTORES.BI_TIEMPO t2 ON t2.id_tiempo = FORMAT(p2.pedido_fecha, 'yyyyMM')
-        WHERE t2.anio = t.anio
-            AND FLOOR((t2.mes + 3) / 4) = FLOOR((t.mes + 3) / 4)
-            AND p2.id_sucursal = p.id_sucursal
-        ) AS DECIMAL(5,2)
-    ) AS porcentaje
-    FROM LOS_GESTORES.BI_HECHO_PEDIDOS p
-        JOIN LOS_GESTORES.BI_TIEMPO t ON t.id_tiempo = FORMAT(p.pedido_fecha, 'yyyyMM')
-    GROUP BY 
-    t.anio,
-    FLOOR((t.mes + 3) / 4),
-    p.id_sucursal,
-    p.estado_pedido;
-GO
-
-
--- 6. Tiempo promedio de fabricaci�n---- 
----nose si esta bien en el join hace 
----JOIN LOS_GESTORES.Factura ON pedido_sucursal+pedido_numero = FACTURA_SUCURSAL+factura_pedido
-
-CREATE VIEW LOS_GESTORES.VW_FABRICACION_PROMEDIO
-AS
-    SELECT
-        f.id_sucursal,
-        f.cuatrimestre,
-        s.sucursal_direccion,
-        CAST(f.dias_demora_promedio AS DECIMAL(10,2)) AS promedio_dias_demora
-    FROM LOS_GESTORES.BI_FABRICACION f
-        JOIN LOS_GESTORES.Sucursal s ON f.id_sucursal = s.sucursal_id
-    ORDER BY f.id_sucursal, f.cuatrimestre;
-GO
+SELECT T.ANIO ,
+LOS_GESTORES.BI_GETCUATRIMESTRE(T.MES) CUATRIMESTRE,
+SUM(dias_demora) / SUM(CANTIDAD_PEDIDOS) DIAS_PROMEDIO
+FROM LOS_GESTORES.BI_HECHO_FABRICACION F
+    JOIN LOS_GESTORES.BI_TIEMPO T ON F.ID_TIEMPO = T.ID_TIEMPO
+GROUP BY 
+T.ANIO ,
+LOS_GESTORES.BI_GETCUATRIMESTRE(T.MES) 
 
 
 -- 7. Promedio de Compras
-CREATE VIEW BI.vw_promedio_compras_mensual
+CREATE VIEW LOS_GESTORES.BI_V07_promedio_compras_mensual
 AS
-    SELECT
-        t.anio,
-        t.mes,
-        AVG(fc.total_compra_encabezado) AS importe_promedio_compras
-    FROM BI.ft_compra fc
-        JOIN BI.dm_tiempo t ON fc.id_tiempo = t.id_tiempo
-    GROUP BY t.anio, t.mes
-    ORDER BY t.anio, t.mes;
-GO
+    SELECT T.ANIO,T.MES,
+    SUM(monto_total) / SUM(CANTIDAD) PROMEDIO
+    FROM LOS_GESTORES.BI_HECHO_COMPRA C
+    JOIN LOS_GESTORES.BI_TIEMPO T ON C.ID_TIEMPO = T.ID_TIEMPO
+    GROUP BY T.ANIO,T.MES
 
 -- 8. Compras por Tipo de Material
-CREATE VIEW BI.vw_compras_por_tipo_material_sucursal_cuatrimestre
+CREATE VIEW LOS_GESTORES.BI_V08_compras_por_tipo_material_sucursal_cuatrimestre
 AS
     SELECT
         t.anio,
