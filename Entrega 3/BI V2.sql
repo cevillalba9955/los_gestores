@@ -495,7 +495,7 @@ GROUP BY
 
 
 insert into LOS_GESTORES.BI_HECHO_ENVIO
-    ( id_tiempo , id_cliente , costo , envios_en_fecha, total_envios )
+    ( id_tiempo , id_cliente , costo , total_envios,envios_en_fecha)
 SELECT LOS_GESTORES.bi_gettiempoID(envio_fecha)
 	, factura_cliente
 	, SUM(envio_importe_subida + envio_importe_traslado) COSTO
@@ -668,102 +668,44 @@ AS
 -- 8. Compras por Tipo de Material
 CREATE VIEW LOS_GESTORES.BI_V08_compras_por_tipo_material_sucursal_cuatrimestre
 AS
-    SELECT
-        t.anio,
-        t.cuatrimestre,
-        s.direccion AS sucursal_direccion,
-        dm.tipo_material,
-        SUM(fc.monto_compra_item) AS importe_total_gastado
-    FROM BI.ft_compra fc
-        JOIN BI.dm_tiempo t ON fc.id_tiempo = t.id_tiempo
-        JOIN BI.dm_sucursal s ON fc.id_sucursal = s.id_sucursal
-        JOIN BI.dm_material dm ON fc.id_material = dm.id_material
-    GROUP BY t.anio, t.cuatrimestre, s.direccion, dm.tipo_material
-    ORDER BY t.anio, t.cuatrimestre, s.direccion, dm.tipo_material;
-GO
+
+SELECT T.ANIO, 
+ LOS_GESTORES.BI_GETCUATRIMESTRE(T.MES) CUATRIMESTRE,
+ C.ID_SUCURSAL,
+ M.tipo_material,
+ SUM(TOTAL_COMPRA) TOTAL_COMPRAS
+FROM LOS_GESTORES.BI_HECHO_MATERIAL C
+  JOIN LOS_GESTORES.BI_TIEMPO T ON C.ID_TIEMPO = T.ID_TIEMPO
+  JOIN LOS_GESTORES.BI_MATERIAL M ON C.ID_material = M.ID_material
+GROUP BY
+T.ANIO, 
+ LOS_GESTORES.BI_GETCUATRIMESTRE(T.MES),
+ C.ID_SUCURSAL,
+ M.tipo_material
+
 
 -- 9. Porcentaje de cumplimiento de env�os en los tiempos programados por mes
-CREATE VIEW BI.vw_porcentaje_cumplimiento_envios_mensual
+CREATE VIEW LOS_GESTORES.BI_V09_porcentaje_cumplimiento_envios_mensual
 AS
-    SELECT
-        t.anio,
-        t.mes,
-        COUNT(e.id_envio) AS total_envios,
-        SUM(CASE WHEN e.cumplimiento_en_tiempo = 1 THEN 1 ELSE 0 END) AS envios_cumplidos_a_tiempo,
-        CAST(SUM(CASE WHEN e.cumplimiento_en_tiempo = 1 THEN 1 ELSE 0 END) AS DECIMAL(18,2)) * 100.0 / COUNT(e.id_envio) AS porcentaje_cumplimiento
-    FROM BI.ft_envio e
-        JOIN BI.dm_tiempo t ON e.id_tiempo = t.id_tiempo
-    GROUP BY t.anio, t.mes
-    ORDER BY t.anio, t.mes;
+SELECT T.ANIO,T.MES,100 * SUM(ENVIOS_EN_FECHA) / SUM(TOTAL_ENVIOS) PORCENTAJE_CUMPLIMIENTO
+FROM LOS_GESTORES.BI_HECHO_ENVIO C
+  JOIN LOS_GESTORES.BI_TIEMPO T ON C.ID_TIEMPO = T.ID_TIEMPO
+  GROUP BY T.ANIO,T.MES
+
 GO
+
+
 
 -- 10. Localidades que pagan mayor costo de env�o
-CREATE VIEW BI.vw_top_3_localidades_mayor_costo_envio
+CREATE VIEW LOS_GESTORES.BI_V10_top_3_localidades_mayor_costo_envio
 AS
-    WITH
-        LocalidadCostoEnvio
-        AS
-        (
-            SELECT
-                u.localidad,
-                AVG(e.costo_envio) AS promedio_costo_envio,
-                ROW_NUMBER() OVER (ORDER BY AVG(e.costo_envio) DESC) AS rn
-            FROM BI.ft_envio e
-                JOIN BI.dm_cliente c ON e.id_cliente = c.id_cliente
-                JOIN BI.dm_ubicacion u ON c.id_ubicacion = u.id_ubicacion
-            GROUP BY u.localidad
-        )
-    SELECT
-        localidad,
-        promedio_costo_envio
-    FROM LocalidadCostoEnvio
-    WHERE rn <= 3
-    ORDER BY promedio_costo_envio DESC;
-CREATE VIEW BI.vw_compras_por_tipo_material_sucursal_cuatrimestre
-AS
-    SELECT
-        t.anio,
-        t.cuatrimestre,
-        s.direccion AS sucursal_direccion,
-        dm.tipo_material,
-        SUM(fc.monto_compra_item) AS importe_total_gastado
-    FROM BI.ft_compra fc
-        JOIN BI.dm_tiempo t ON fc.id_tiempo = t.id_tiempo
-        JOIN BI.dm_sucursal s ON fc.id_sucursal = s.id_sucursal
-        JOIN BI.dm_material dm ON fc.id_material = dm.id_material
-    GROUP BY t.anio, t.cuatrimestre, s.direccion, dm.tipo_material
-    ORDER BY t.anio, t.cuatrimestre, s.direccion, dm.tipo_material;
-GO
+SELECT TOP 3 U.localidad
+FROM LOS_GESTORES.BI_HECHO_ENVIO E
+JOIN LOS_GESTORES.BI_cliente C ON E.ID_CLIENTE = C.ID_CLIENTE
+JOIN LOS_GESTORES.BI_ubicacion U ON C.id_ubicacion = U.id_ubicacion
+GROUP BY U.localidad,U.id_ubicacion
+ORDER BY SUM(E.COSTO)/SUM(TOTAL_ENVIOS) DESC
 
--- 9. Porcentaje de cumplimiento de env�os en los tiempos programados por mes
-CREATE VIEW LOS_GESTORES.VW_PORCENTAJE_CUMPLIMIENTO_MENSUAL_ENVIOS
-AS
-    SELECT
-        t.anio,
-        t.mes,
-        CAST(100.0 * SUM(e.envios_en_fecha) / SUM(e.total_envios) AS DECIMAL(5,2)) AS porcentaje_cumplimiento
-    FROM LOS_GESTORES.BI_ENVIO e
-        JOIN LOS_GESTORES.BI_TIEMPO t ON e.id_tiempo = t.id_tiempo
-    GROUP BY 
-    t.anio,
-    t.mes;
-GO
-
-
--- 10. Localidades que pagan mayor costo de env�o 
-CREATE VIEW LOS_GESTORES.VW_LOCALIDADES_MAYOR_COSTO_ENVIO
-AS
-    SELECT TOP 3
-        cl.localidad_id,
-        cl.localidad_descripcion,
-        CAST(SUM(e.costo) / SUM(e.total_envios) AS DECIMAL(10,2)) AS promedio_envio
-    FROM LOS_GESTORES.BI_ENVIO e
-        JOIN LOS_GESTORES.BI_CLIENTE cl ON e.id_cliente = cl.id_cliente
-    GROUP BY 
-    cl.localidad_id,
-    cl.localidad_descripcion
-    ORDER BY 
-    promedio_envio DESC;
 GO
 
 
