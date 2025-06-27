@@ -261,6 +261,15 @@ CREATE TABLE LOS_GESTORES.BI_HECHO_PEDIDOS (
 GO
 
 
+CREATE TABLE LOS_GESTORES.BI_HECHO_FABRICACION (
+    id_sucursal INT,
+    cuatrimestre INT,
+    dias_demora_promedio DECIMAL(10, 2),
+    CONSTRAINT FK_FABRICACION_SUCURSAL FOREIGN KEY (id_sucursal) REFERENCES LOS_GESTORES.Sucursal(id_sucursal)
+);
+GO
+
+
 CREATE TABLE BI.ft_compra (
     id_detalle_compra BIGINT PRIMARY KEY, 
     id_compra_encabezado DECIMAL(18,0),
@@ -345,6 +354,24 @@ GROUP BY
     p.pedido_estado;
 GO
 
+INSERT INTO LOS_GESTORES.BI_FABRICACION (id_sucursal, cuatrimestre, dias_demora_promedio)
+SELECT 
+    p.pedido_sucursal,
+    BI.getCuatrimestre(p.pedido_fecha) AS cuatrimestre,
+    AVG(DATEDIFF(DAY, p.pedido_fecha, f.factura_fecha)) AS dias_demora_promedio
+FROM LOS_GESTORES.Pedido p
+JOIN LOS_GESTORES.Factura f 
+  ON p.pedido_sucursal = f.factura_sucursal
+ AND p.pedido_numero = f.factura_pedido
+GROUP BY 
+    p.pedido_sucursal, 
+    BI.getCuatrimestre(p.pedido_fecha);
+GO
+
+
+
+
+
 
 
 INSERT INTO BI.ft_compra (id_compra, id_proveedor, id_material, id_sucursal, id_tiempo, monto_compra, cantidad_comprada)
@@ -367,7 +394,7 @@ GO
 PRINT '6. Creando vistas para consultas de negocio';
 GO
 
--- 1. Ganancias
+-- 1. Ganancias falta
 CREATE VIEW BI.vw_ganancias_mensuales_por_sucursal AS
 SELECT
     t.anio,
@@ -382,7 +409,7 @@ GROUP BY t.anio, t.mes, s.direccion
 ORDER BY t.anio, t.mes, s.direccion;
 GO
 
--- 2. Factura promedio mensual 
+-- 2. Factura promedio mensual falta
 CREATE VIEW BI.vw_factura_promedio_provincia_cuatrimestre AS
 SELECT
     t.anio,
@@ -397,7 +424,7 @@ GROUP BY t.anio, t.cuatrimestre, u.provincia
 ORDER BY t.anio, t.cuatrimestre, u.provincia;
 GO
 
--- 3. Rendimiento de modelos
+-- 3. Rendimiento de modelos falta
 CREATE VIEW BI.vw_top_3_modelos_por_cuatrimestre_localidad_rango_etario AS
 WITH ModeloVentas AS (
     SELECT
@@ -478,20 +505,21 @@ GROUP BY
 GO
 
 
--- 6. Tiempo promedio de fabricación
-CREATE VIEW BI.vw_tiempo_promedio_fabricacion_sucursal_cuatrimestre AS
+-- 6. Tiempo promedio de fabricación---- 
+---nose si esta bien en el join hace 
+---JOIN LOS_GESTORES.Factura ON pedido_sucursal+pedido_numero = FACTURA_SUCURSAL+factura_pedido
+
+CREATE VIEW LOS_GESTORES.VW_FABRICACION_PROMEDIO AS
 SELECT
-    t.anio,
-    t.cuatrimestre,
-    s.direccion AS sucursal_direccion,
-    AVG(f.tiempo_fabricacion) AS tiempo_promedio_fabricacion_dias
-FROM BI.ft_factura f
-JOIN BI.dm_tiempo t ON f.id_tiempo = t.id_tiempo
-JOIN BI.dm_sucursal s ON f.id_sucursal = s.id_sucursal
-WHERE f.tiempo_fabricacion IS NOT NULL
-GROUP BY t.anio, t.cuatrimestre, s.direccion
-ORDER BY t.anio, t.cuatrimestre, s.direccion;
+    f.id_sucursal,
+    f.cuatrimestre,
+    s.sucursal_direccion,
+    CAST(f.dias_demora_promedio AS DECIMAL(10,2)) AS promedio_dias_demora
+FROM LOS_GESTORES.BI_FABRICACION f
+JOIN LOS_GESTORES.Sucursal s ON f.id_sucursal = s.sucursal_id
+ORDER BY f.id_sucursal, f.cuatrimestre;
 GO
+
 
 -- 7. Promedio de Compras
 CREATE VIEW BI.vw_promedio_compras_mensual AS
