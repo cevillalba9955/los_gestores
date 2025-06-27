@@ -15,7 +15,7 @@ AS BEGIN
 END
 GO
 
-ALTER FUNCTION LOS_GESTORES.BI_getEstadoPedidoId(@Estado NVARCHAR(255))
+create FUNCTION LOS_GESTORES.BI_getEstadoPedidoId(@Estado NVARCHAR(255))
 RETURNS SMALLINT
 AS BEGIN
     DECLARE @ID_Estado SMALLINT
@@ -31,6 +31,25 @@ AS BEGIN
     RETURN @ID_Estado
 END
 GO
+
+
+CREATE FUNCTION LOS_GESTORES.BI_getMATERIALId(@material NVARCHAR(255))
+RETURNS SMALLINT
+AS BEGIN
+    DECLARE @ID_material SMALLINT
+
+    SET @ID_material =
+		CASE 
+			WHEN @material = 'Madera' THEN 1
+			WHEN @material = 'Tela' THEN 2
+			WHEN @material = 'Relleno' THEN 3
+            ELSE 0
+		END
+
+    RETURN @ID_material
+END
+GO
+
 
 CREATE FUNCTION LOS_GESTORES.BI_getTurnoVenta (@fechaHora DATETIME)
 RETURNS INT
@@ -50,7 +69,7 @@ BEGIN
 
     RETURN @turno
 END
-
+GO
 
 
 
@@ -372,15 +391,38 @@ CREATE TABLE LOS_GESTORES.BI_HECHO_PEDIDO
 );
 GO
 
-
-
-CREATE TABLE LOS_GESTORES.BI_HECHO_ENVIO 
+CREATE TABLE LOS_GESTORES.BI_HECHO_FABRICACION
 (
-    id_tiempo INT,
+    id_sucursal BIGINT,
+    id_tiempo NVARCHAR(6),
+    dias_demora DECIMAL(18, 2),
+    cantidad_pedidos decimal(18,2)
+        CONSTRAINT FK_BI_fabricacion_tiempo FOREIGN KEY (id_tiempo) REFERENCES LOS_GESTORES.BI_TIEMPO(id_tiempo),
+    CONSTRAINT FK_bi_FABRICACION_SUCURSAL FOREIGN KEY (id_sucursal) REFERENCES LOS_GESTORES.BI_Sucursal(id_sucursal)
+);
+GO
+
+
+CREATE TABLE LOS_GESTORES.BI_HECHO_MATERIAL
+(
+    id_sucursal BIGINT,
+    id_tiempo NVARCHAR(6),
+    id_material BIGINT,
+    total_compra NUMERIC(18,2),
+        CONSTRAINT FK_BI_MATERIAL_tiempo FOREIGN KEY (id_tiempo) REFERENCES LOS_GESTORES.BI_TIEMPO(id_tiempo),
+        CONSTRAINT FK_BI_MATERIAL_MATERIAL FOREIGN KEY (id_material) REFERENCES LOS_GESTORES.BI_MATERIAL(id_material),
+        CONSTRAINT FK_bi_MATERIAL_SUCURSAL FOREIGN KEY (id_sucursal) REFERENCES LOS_GESTORES.BI_Sucursal(id_sucursal)
+
+);
+GO
+
+CREATE TABLE LOS_GESTORES.BI_HECHO_ENVIO
+(
+    id_tiempo NVARCHAR(6),
     id_cliente INT,
+    costo DECIMAL(10,2),
     envios_en_fecha int,
-    costo DECIMAL(10,2), 
-	total_envios int,
+    total_envios int,
     CONSTRAINT FK_BI_envio_tiempo FOREIGN KEY (id_tiempo) REFERENCES LOS_GESTORES.BI_TIEMPO(id_tiempo),
     CONSTRAINT FK_BI_envio_cliente FOREIGN KEY (id_cliente) REFERENCES LOS_GESTORES.BI_CLIENTE(id_cliente)
 );
@@ -388,44 +430,10 @@ GO
 
 
 
-CREATE TABLE LOS_GESTORES.BI_HECHO_PEDIDOS (
-    id_tiempo INT
-    id_sucursal INT,
-    id_turno INT,
-    estado_pedido VARCHAR(50),
-    cantidad INT,
-	CONSTRAINT FK_BI_pedido_tiempo FOREIGN KEY (id_tiempo) REFERENCES LOS_GESTORES.BI_TIEMPO(ID_TIEMPO),
-    CONSTRAINT FK_BI_pedido_sucursal FOREIGN KEY (id_sucursal) REFERENCES LOS_GESTORES.Sucursal(ID_SUCURSAL),
-    CONSTRAINT FK_BI_pedido_turno FOREIGN KEY (id_turno) REFERENCES LOS_GESTORES.BI_TURNO(ID_TURNO)
-);
-GO
 
 
-CREATE TABLE LOS_GESTORES.BI_HECHO_FABRICACION (
-    id_sucursal INT,
-    cuatrimestre INT,
-    dias_demora_promedio DECIMAL(10, 2),
-    CONSTRAINT FK_FABRICACION_SUCURSAL FOREIGN KEY (id_sucursal) REFERENCES LOS_GESTORES.Sucursal(id_sucursal)
-);
-GO
 
 
-CREATE TABLE BI.ft_compra (
-    id_detalle_compra BIGINT PRIMARY KEY, 
-    id_compra_encabezado DECIMAL(18,0),
-    id_proveedor INT,
-    id_material BIGINT,
-    id_sucursal BIGINT, 
-    id_tiempo INT,
-    monto_compra_item DECIMAL(18,2), 
-    cantidad_comprada DECIMAL(18,0),
-    total_compra_encabezado DECIMAL(18,2), 
-    CONSTRAINT FK_ft_compra_proveedor FOREIGN KEY (id_proveedor) REFERENCES BI.dm_proveedor(id_proveedor),
-    CONSTRAINT FK_ft_compra_material FOREIGN KEY (id_material) REFERENCES BI.dm_material(id_material),
-    CONSTRAINT FK_ft_compra_sucursal FOREIGN KEY (id_sucursal) REFERENCES BI.dm_sucursal(id_sucursal),
-    CONSTRAINT FK_ft_compra_tiempo FOREIGN KEY (id_tiempo) REFERENCES BI.dm_tiempo(id_tiempo)
-);
-GO
 
 PRINT '5. Insertando datos en tablas de hechos';
 GO
@@ -486,86 +494,59 @@ GROUP BY
     ,LOS_GESTORES.BI_getTurnoVenta(pedido_fecha)
 
 
+INSERT INTO LOS_GESTORES.BI_HECHO_FABRICACION
+    (id_sucursal , id_tiempo , dias_demora , cantidad_pedidos)
+SELECT PEDIDO_SUCURSAL
+, LOS_GESTORES.bi_gettiempoID(pedido_fecha)
+, sum(DATEDIFF(DAY, pedido_fecha,factura_fecha)) 
+, count(*)
+FROM LOS_GESTORES.Pedido
+    JOIN LOS_GESTORES.Factura ON pedido_sucursal+pedido_numero = FACTURA_SUCURSAL+factura_pedido
+GROUP BY pedido_sucursal
+,LOS_GESTORES.bi_gettiempoID(pedido_fecha)
 
 
-INSERT INTO BI.ft_envio
-    (id_tiempo, id_cliente, id_pedido, id_sucursal, fecha_envio_programada, fecha_envio_real, costo_envio, cumplimiento_en_tiempo)
-SELECT
-    t.id_tiempo,
-    c.cliente_id,
-    p.pedido_numero,
-    s.sucursal_nroSucursal,
-    e.envio_fecha_programada,
-    e.envio_fecha,
-    e.envio_importe_traslado + ISNULL(e.envio_importe_subida, 0),
-    CASE
-        WHEN e.envio_fecha IS NOT NULL AND e.envio_fecha <= e.envio_fecha_programada THEN 1 
-        WHEN e.envio_fecha IS NOT NULL AND e.envio_fecha > e.envio_fecha_programada THEN 0 
-        ELSE NULL 
-    END
-FROM LOS_GESTORES.Envio e
-    JOIN LOS_GESTORES.Factura f ON e.envio_factura = f.factura_numero
-    JOIN LOS_GESTORES.Pedido p ON f.factura_pedido = p.pedido_numero
-    JOIN LOS_GESTORES.Cliente c ON p.pedido_cliente = c.cliente_id
-    JOIN LOS_GESTORES.Sucursal s ON p.pedido_sucursal = s.sucursal_nroSucursal
-    JOIN BI.dm_tiempo t ON CAST(e.envio_fecha_programada AS DATE) = t.fecha;
-GO
+INSERT INTO LOS_GESTORES.BI_HECHO_MATERIAL
+    ( id_sucursal , id_tiempo , id_material , total_compra )
+SELECT COMPRA_SUCURSAL SUCURSAL
+    , LOS_GESTORES.bi_gettiempoID(COMPRA_FECHA)
+	, LOS_GESTORES.BI_getMATERIALId(material_tipo)
+	, SUM(detalle_compra_cantidad* detalle_compra_precio) TOTAL
+FROM LOS_GESTORES.COMPRA
+    JOIN LOS_GESTORES.Detalle_Compra ON COMPRA.compra_numero = detalle_compra_numero
+    JOIN LOS_GESTORES.Material ON detalle_compra_material = material_id
+GROUP BY
+	 COMPRA_SUCURSAL
+    , LOS_GESTORES.bi_gettiempoID(COMPRA_FECHA)
+	,LOS_GESTORES.BI_getMATERIALId(material_tipo)
 
-INSERT INTO BI.ft_pedido
-    (id_pedido, id_cliente, id_sucursal, id_tiempo, id_estado, id_turno, id_sillon, cantidad_pedida, precio_unitario_sillon, total_pedido, tiempo_fabricacion, motivo_cancelacion)
-SELECT
-    t.id_tiempo,
-    p.pedido_sucursal,
-    BI.getTurnoVenta(p.pedido_fecha) AS id_turno,
-    p.pedido_estado,
-    COUNT(*) AS cantidad
-FROM LOS_GESTORES.Pedido p
-JOIN LOS_GESTORES.BI_TIEMPO t
-    ON t.anio = YEAR(p.pedido_fecha)
-    AND t.mes = MONTH(p.pedido_fecha)
+
+insert into LOS_GESTORES.BI_HECHO_ENVIO
+    ( id_tiempo , id_cliente , costo , envios_en_fecha, total_envios )
+SELECT LOS_GESTORES.bi_gettiempoID(envio_fecha)
+	, factura_cliente
+	, SUM(envio_importe_subida + envio_importe_traslado) COSTO
+	, COUNT(*) TOTAL_ENVIOS,
+    (SELECT COUNT(*)
+    FROM LOS_GESTORES.Envio
+        JOIN LOS_GESTORES.Factura ON envio_factura = factura_numero
+    WHERE 
+    LOS_GESTORES.bi_gettiempoID(envio_fecha) = LOS_GESTORES.bi_gettiempoID(t1.envio_fecha)
+        and factura_cliente = f1.factura_cliente
+        AND DATEDIFF(DAY,envio_fecha_programada,envio_fecha) = 0 ) ENVIOS_EN_FECHA
+
+fROM LOS_GESTORES.Envio T1
+    JOIN LOS_GESTORES.Factura F1 ON envio_factura = factura_numero
 GROUP BY 
-    t.id_tiempo,
-    p.pedido_sucursal,
-    BI.getTurnoVenta(p.pedido_fecha),
-    p.pedido_estado;
-GO
+LOS_GESTORES.bi_gettiempoID(envio_fecha)
+	,factura_cliente
 
-INSERT INTO LOS_GESTORES.BI_FABRICACION (id_sucursal, cuatrimestre, dias_demora_promedio)
-SELECT 
-    p.pedido_sucursal,
-    BI.getCuatrimestre(p.pedido_fecha) AS cuatrimestre,
-    AVG(DATEDIFF(DAY, p.pedido_fecha, f.factura_fecha)) AS dias_demora_promedio
-FROM LOS_GESTORES.Pedido p
-JOIN LOS_GESTORES.Factura f 
-  ON p.pedido_sucursal = f.factura_sucursal
- AND p.pedido_numero = f.factura_pedido
-GROUP BY 
-    p.pedido_sucursal, 
-    BI.getCuatrimestre(p.pedido_fecha);
 GO
 
 
 
 
 
-
-
-INSERT INTO BI.ft_compra (id_compra, id_proveedor, id_material, id_sucursal, id_tiempo, monto_compra, cantidad_comprada)
-SELECT
-    dc.detalle_compra_numero,
-    prov.id_proveedor,
-    dm.id_material,
-    suc.id_sucursal,
-    t.id_tiempo,
-    dc.detalle_compra_precio * dc.detalle_compra_cantidad,
-    dc.detalle_compra_cantidad
-FROM LOS_GESTORES.Detalle_Compra dc
-    JOIN LOS_GESTORES.Compra com ON dc.detalle_compra_numero = com.compra_numero
-    JOIN BI.dm_proveedor prov ON com.compra_proveedor = prov.id_proveedor
-    JOIN BI.dm_material dm ON dc.detalle_compra_material = dm.id_material
-    JOIN BI.dm_sucursal suc ON com.compra_sucursal = suc.id_sucursal
-    JOIN BI.dm_tiempo t ON CAST(com.compra_fecha AS DATE) = t.fecha;
-GO
 
 PRINT '6. Creando vistas para consultas de negocio';
 GO
@@ -694,16 +675,17 @@ AS
     GROUP BY t.anio, t.cuatrimestre, s.direccion
     ORDER BY t.anio, t.cuatrimestre, s.direccion;
 
-CREATE VIEW LOS_GESTORES.VW_PEDIDOS_POR_TURNO AS
-SELECT 
-    t.anio,
-    t.mes,
-    p.id_sucursal,
-    p.id_turno,
-    SUM(p.cantidad) AS pedidos
-FROM LOS_GESTORES.BI_HECHO_PEDIDOS p
-JOIN LOS_GESTORES.BI_TIEMPO t ON t.id_tiempo = FORMAT(p.pedido_fecha, 'yyyyMM')
-GROUP BY 
+CREATE VIEW LOS_GESTORES.VW_PEDIDOS_POR_TURNO
+AS
+    SELECT
+        t.anio,
+        t.mes,
+        p.id_sucursal,
+        p.id_turno,
+        SUM(p.cantidad) AS pedidos
+    FROM LOS_GESTORES.BI_HECHO_PEDIDOS p
+        JOIN LOS_GESTORES.BI_TIEMPO t ON t.id_tiempo = FORMAT(p.pedido_fecha, 'yyyyMM')
+    GROUP BY 
     t.anio,
     t.mes,
     p.id_sucursal,
@@ -715,25 +697,26 @@ GO
 
 
 -- 5. Conversi�n de pedidos
-CREATE VIEW LOS_GESTORES.VW_CONVERSION_PEDIDOS AS
-SELECT 
-    t.anio,
-    FLOOR((t.mes + 3) / 4) AS cuatrimestre,
-    p.id_sucursal,
-    p.estado_pedido,
-    CAST(
+CREATE VIEW LOS_GESTORES.VW_CONVERSION_PEDIDOS
+AS
+    SELECT
+        t.anio,
+        FLOOR((t.mes + 3) / 4) AS cuatrimestre,
+        p.id_sucursal,
+        p.estado_pedido,
+        CAST(
         100.0 * SUM(p.cantidad) / (
             SELECT SUM(p2.cantidad)
-            FROM LOS_GESTORES.BI_HECHO_PEDIDOS p2
+        FROM LOS_GESTORES.BI_HECHO_PEDIDOS p2
             JOIN LOS_GESTORES.BI_TIEMPO t2 ON t2.id_tiempo = FORMAT(p2.pedido_fecha, 'yyyyMM')
-            WHERE t2.anio = t.anio
-              AND FLOOR((t2.mes + 3) / 4) = FLOOR((t.mes + 3) / 4)
-              AND p2.id_sucursal = p.id_sucursal
+        WHERE t2.anio = t.anio
+            AND FLOOR((t2.mes + 3) / 4) = FLOOR((t.mes + 3) / 4)
+            AND p2.id_sucursal = p.id_sucursal
         ) AS DECIMAL(5,2)
     ) AS porcentaje
-FROM LOS_GESTORES.BI_HECHO_PEDIDOS p
-JOIN LOS_GESTORES.BI_TIEMPO t ON t.id_tiempo = FORMAT(p.pedido_fecha, 'yyyyMM')
-GROUP BY 
+    FROM LOS_GESTORES.BI_HECHO_PEDIDOS p
+        JOIN LOS_GESTORES.BI_TIEMPO t ON t.id_tiempo = FORMAT(p.pedido_fecha, 'yyyyMM')
+    GROUP BY 
     t.anio,
     FLOOR((t.mes + 3) / 4),
     p.id_sucursal,
@@ -745,15 +728,16 @@ GO
 ---nose si esta bien en el join hace 
 ---JOIN LOS_GESTORES.Factura ON pedido_sucursal+pedido_numero = FACTURA_SUCURSAL+factura_pedido
 
-CREATE VIEW LOS_GESTORES.VW_FABRICACION_PROMEDIO AS
-SELECT
-    f.id_sucursal,
-    f.cuatrimestre,
-    s.sucursal_direccion,
-    CAST(f.dias_demora_promedio AS DECIMAL(10,2)) AS promedio_dias_demora
-FROM LOS_GESTORES.BI_FABRICACION f
-JOIN LOS_GESTORES.Sucursal s ON f.id_sucursal = s.sucursal_id
-ORDER BY f.id_sucursal, f.cuatrimestre;
+CREATE VIEW LOS_GESTORES.VW_FABRICACION_PROMEDIO
+AS
+    SELECT
+        f.id_sucursal,
+        f.cuatrimestre,
+        s.sucursal_direccion,
+        CAST(f.dias_demora_promedio AS DECIMAL(10,2)) AS promedio_dias_demora
+    FROM LOS_GESTORES.BI_FABRICACION f
+        JOIN LOS_GESTORES.Sucursal s ON f.id_sucursal = s.sucursal_id
+    ORDER BY f.id_sucursal, f.cuatrimestre;
 GO
 
 
@@ -824,47 +808,50 @@ AS
     FROM LocalidadCostoEnvio
     WHERE rn <= 3
     ORDER BY promedio_costo_envio DESC;
-CREATE VIEW BI.vw_compras_por_tipo_material_sucursal_cuatrimestre AS
-SELECT
-    t.anio,
-    t.cuatrimestre,
-    s.direccion AS sucursal_direccion,
-    dm.tipo_material,
-    SUM(fc.monto_compra_item) AS importe_total_gastado
-FROM BI.ft_compra fc
-JOIN BI.dm_tiempo t ON fc.id_tiempo = t.id_tiempo
-JOIN BI.dm_sucursal s ON fc.id_sucursal = s.id_sucursal
-JOIN BI.dm_material dm ON fc.id_material = dm.id_material
-GROUP BY t.anio, t.cuatrimestre, s.direccion, dm.tipo_material
-ORDER BY t.anio, t.cuatrimestre, s.direccion, dm.tipo_material;
+CREATE VIEW BI.vw_compras_por_tipo_material_sucursal_cuatrimestre
+AS
+    SELECT
+        t.anio,
+        t.cuatrimestre,
+        s.direccion AS sucursal_direccion,
+        dm.tipo_material,
+        SUM(fc.monto_compra_item) AS importe_total_gastado
+    FROM BI.ft_compra fc
+        JOIN BI.dm_tiempo t ON fc.id_tiempo = t.id_tiempo
+        JOIN BI.dm_sucursal s ON fc.id_sucursal = s.id_sucursal
+        JOIN BI.dm_material dm ON fc.id_material = dm.id_material
+    GROUP BY t.anio, t.cuatrimestre, s.direccion, dm.tipo_material
+    ORDER BY t.anio, t.cuatrimestre, s.direccion, dm.tipo_material;
 GO
 
 -- 9. Porcentaje de cumplimiento de env�os en los tiempos programados por mes
-CREATE VIEW LOS_GESTORES.VW_PORCENTAJE_CUMPLIMIENTO_MENSUAL_ENVIOS AS
-SELECT 
-    t.anio,
-    t.mes,
-    CAST(100.0 * SUM(e.envios_en_fecha) / SUM(e.total_envios) AS DECIMAL(5,2)) AS porcentaje_cumplimiento
-FROM LOS_GESTORES.BI_ENVIO e
-JOIN LOS_GESTORES.BI_TIEMPO t ON e.id_tiempo = t.id_tiempo
-GROUP BY 
+CREATE VIEW LOS_GESTORES.VW_PORCENTAJE_CUMPLIMIENTO_MENSUAL_ENVIOS
+AS
+    SELECT
+        t.anio,
+        t.mes,
+        CAST(100.0 * SUM(e.envios_en_fecha) / SUM(e.total_envios) AS DECIMAL(5,2)) AS porcentaje_cumplimiento
+    FROM LOS_GESTORES.BI_ENVIO e
+        JOIN LOS_GESTORES.BI_TIEMPO t ON e.id_tiempo = t.id_tiempo
+    GROUP BY 
     t.anio,
     t.mes;
 GO
 
 
 -- 10. Localidades que pagan mayor costo de env�o 
-CREATE VIEW LOS_GESTORES.VW_LOCALIDADES_MAYOR_COSTO_ENVIO AS
-SELECT TOP 3
-    cl.localidad_id,
-    cl.localidad_descripcion,
-    CAST(SUM(e.costo) / SUM(e.total_envios) AS DECIMAL(10,2)) AS promedio_envio
-FROM LOS_GESTORES.BI_ENVIO e
-JOIN LOS_GESTORES.BI_CLIENTE cl ON e.id_cliente = cl.id_cliente
-GROUP BY 
+CREATE VIEW LOS_GESTORES.VW_LOCALIDADES_MAYOR_COSTO_ENVIO
+AS
+    SELECT TOP 3
+        cl.localidad_id,
+        cl.localidad_descripcion,
+        CAST(SUM(e.costo) / SUM(e.total_envios) AS DECIMAL(10,2)) AS promedio_envio
+    FROM LOS_GESTORES.BI_ENVIO e
+        JOIN LOS_GESTORES.BI_CLIENTE cl ON e.id_cliente = cl.id_cliente
+    GROUP BY 
     cl.localidad_id,
     cl.localidad_descripcion
-ORDER BY 
+    ORDER BY 
     promedio_envio DESC;
 GO
 
