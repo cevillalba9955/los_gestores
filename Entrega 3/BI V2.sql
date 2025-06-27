@@ -81,112 +81,6 @@ GO
 PRINT 'Tablas de dimensiones creadas.';
 GO
 
-PRINT '3. Insertando datos en dimensiones';
-GO
-
-INSERT INTO LOS_GESTORES.BI_ubicacion
-    (id_ubicacion,localidad, provincia)
-SELECT DISTINCT
-    l.localidad_id,
-    l.localidad_descripcion,
-    p.provincia_descripcion
-FROM LOS_GESTORES.Localidad l
-    JOIN LOS_GESTORES.Provincia p ON l.localidad_provincia = p.provincia_id;
-
-GO
-
-INSERT INTO LOS_GESTORES.BI_cliente
-    (
-    id_cliente, nombre, apellido, fecha_nacimiento, id_ubicacion
-    )
-SELECT
-    c.cliente_id,
-    c.cliente_nombre,
-    c.cliente_apellido,
-    c.cliente_fechanacimiento,
-    c.cliente_localidad
-FROM LOS_GESTORES.Cliente c
-GO
-
-INSERT INTO LOS_GESTORES.BI_proveedor
-    (
-    id_proveedor, nombre, id_ubicacion
-    )
-SELECT
-    p.proveedor_id,
-    p.proveedor_razonSocial,
-    P.proveedor_localidad
-FROM LOS_GESTORES.Proveedor p
-GO
-
-
-INSERT INTO LOS_GESTORES.BI_sucursal
-    (
-    id_sucursal, id_ubicacion
-    )
-SELECT
-    s.sucursal_nroSucursal,
-    S.sucursal_localidad
-FROM LOS_GESTORES.Sucursal s
-GO
-
-INSERT INTO LOS_GESTORES.BI_tiempo
-    (ID_TIEMPO,anio,mes)
-SELECT BI_GET_TIEMPO_ID(PEDIDO_FECHA) , YEAR(pedido_fecha), MONTH(pedido_fecha)
-FROM LOS_GESTORES.Pedido
-GROUP BY YEAR(pedido_fecha), MONTH(pedido_fecha)
-ORDER BY 1,2
-GO
-
-INSERT INTO LOS_GESTORES.BI_turno
-    (ID_TURNO,descripcion_turno)
-VALUES(1, '08:00-14:00')
-INSERT INTO LOS_GESTORES.BI_turno
-    (ID_TURNO,descripcion_turno)
-VALUES(2, '14:00-20:00')
-INSERT INTO LOS_GESTORES.BI_turno
-    (ID_TURNO,descripcion_turno)
-VALUES(0, 'Fuera de turno')
-GO
-
-INSERT INTO LOS_GESTORES.BI_estado_pedido
-    (id_estado,estado)
-VALUES
-    (1, 'PENDIENTE')
-INSERT INTO LOS_GESTORES.BI_estado_pedido
-    (id_estado,estado)
-VALUES
-    (2, 'ENTREGADO')
-INSERT INTO LOS_GESTORES.BI_estado_pedido
-    (id_estado,estado)
-VALUES
-    (3, 'CANCELADO')
-GO
-
-
-
-INSERT INTO LOS_GESTORES.BI_material
-    (id_material, tipo_material)
-VALUES
-    (1, 'Madera')
-INSERT INTO LOS_GESTORES.BI_material
-    (id_material, tipo_material)
-VALUES
-    (2, 'Tela')
-INSERT INTO LOS_GESTORES.BI_material
-    (id_material, tipo_material)
-VALUES
-    (3, 'Relleno')
-GO
-
-
-INSERT INTO LOS_GESTORES.BI_modelo
-    (id_modelo, modelo_nombre)
-SELECT
-    sm.sillon_modelo_codigo,
-    sm.sillon_modelo
-FROM LOS_GESTORES.Sillon_Modelo sm;
-GO
 
 PRINT '4. Creando tablas de hechos';
 GO
@@ -405,6 +299,112 @@ END
 GO
 
 PRINT 'Funciones BI creadas.';
+GO
+PRINT '3. Insertando datos en dimensiones';
+GO
+
+INSERT INTO LOS_GESTORES.BI_ubicacion
+    (id_ubicacion,localidad, provincia)
+SELECT DISTINCT
+    l.localidad_id,
+    l.localidad_descripcion,
+    p.provincia_descripcion
+FROM LOS_GESTORES.Localidad l
+    JOIN LOS_GESTORES.Provincia p ON l.localidad_provincia = p.provincia_id;
+
+GO
+
+INSERT INTO LOS_GESTORES.BI_cliente
+    (
+    id_cliente, nombre, apellido, fecha_nacimiento, id_ubicacion
+    )
+SELECT
+    c.cliente_id,
+    c.cliente_nombre,
+    c.cliente_apellido,
+    c.cliente_fechanacimiento,
+    c.cliente_localidad
+FROM LOS_GESTORES.Cliente c
+GO
+
+INSERT INTO LOS_GESTORES.BI_proveedor
+    (
+    id_proveedor, nombre, id_ubicacion
+    )
+SELECT
+    p.proveedor_id,
+    p.proveedor_razonSocial,
+    P.proveedor_localidad
+FROM LOS_GESTORES.Proveedor p
+GO
+
+
+INSERT INTO LOS_GESTORES.BI_sucursal
+    (
+    id_sucursal, id_ubicacion
+    )
+SELECT
+    s.sucursal_nroSucursal,
+    S.sucursal_localidad
+FROM LOS_GESTORES.Sucursal s
+GO
+
+INSERT INTO LOS_GESTORES.BI_tiempo
+    (ID_TIEMPO,anio,mes)
+SELECT BI_GET_TIEMPO_ID(PEDIDO_FECHA) , YEAR(pedido_fecha), MONTH(pedido_fecha)
+FROM LOS_GESTORES.Pedido
+GROUP BY YEAR(pedido_fecha), MONTH(pedido_fecha)
+ORDER BY 1,2
+GO
+
+INSERT INTO LOS_GESTORES.BI_turno
+    (ID_TURNO,descripcion_turno)
+VALUES(1, '08:00-14:00')
+INSERT INTO LOS_GESTORES.BI_turno
+    (ID_TURNO,descripcion_turno)
+VALUES(2, '14:00-20:00')
+INSERT INTO LOS_GESTORES.BI_turno
+    (ID_TURNO,descripcion_turno)
+VALUES(0, 'Fuera de turno')
+GO
+
+INSERT INTO LOS_GESTORES.BI_estado_pedido
+    (id_estado,estado)
+VALUES
+    (1, 'PENDIENTE')
+INSERT INTO LOS_GESTORES.BI_estado_pedido
+    (id_estado,estado)
+VALUES
+    (2, 'ENTREGADO')
+INSERT INTO LOS_GESTORES.BI_estado_pedido
+    (id_estado,estado)
+VALUES
+    (3, 'CANCELADO')
+GO
+
+
+
+INSERT INTO LOS_GESTORES.BI_material
+    (id_material, tipo_material)
+VALUES
+    (1, 'Madera')
+INSERT INTO LOS_GESTORES.BI_material
+    (id_material, tipo_material)
+VALUES
+    (2, 'Tela')
+INSERT INTO LOS_GESTORES.BI_material
+    (id_material, tipo_material)
+VALUES
+    (3, 'Relleno')
+GO
+
+
+INSERT INTO LOS_GESTORES.BI_modelo
+    (id_modelo, modelo_nombre)
+SELECT
+    sm.sillon_modelo_codigo,
+    sm.sillon_modelo
+FROM LOS_GESTORES.Sillon_Modelo sm;
 GO
 
 
