@@ -8,10 +8,10 @@ CREATE FUNCTION LOS_GESTORES.BI_GetTiempoID(@FECHA DATE)
 END
 GO
 
-CREATE FUNCTION LOS_GESTORES.BI_getCuatrimestre (@fecha DATE)
+CREATE FUNCTION LOS_GESTORES.BI_getCuatrimestre (@MES INT)
 RETURNS SMALLINT
 AS BEGIN
-    RETURN FLOOR((MONTH(@FECHA) + 3)/4)
+    RETURN FLOOR((@MES + 3)/4)
 END
 GO
 
@@ -96,24 +96,7 @@ END
 GO
 
 
-CREATE FUNCTION BI.getTurnoVenta (@fechaHora DATETIME)
-RETURNS INT
-AS
-BEGIN
-    DECLARE @hora INT
-    DECLARE @turno INT
 
-    SET @hora = DATEPART(HOUR, @fechaHora)
-
-    SET @turno = 
-        CASE 
-            WHEN @hora >= 8 AND @hora < 14 THEN 1
-            WHEN @hora >= 14 AND @hora < 20 THEN 2
-            ELSE 0
-        END
-
-    RETURN @turno
-END
 
 
 GO
@@ -552,35 +535,38 @@ PRINT '6. Creando vistas para consultas de negocio';
 GO
 
 -- 1. Ganancias
-CREATE VIEW BI.vw_ganancias_mensuales_por_sucursal
+CREATE VIEW LOS_GESTORES.BI_V01_ganancias_mensuales_por_sucursal
 AS
-    SELECT
-        t.anio,
-        t.mes,
-        s.direccion AS sucursal_direccion,
-        ISNULL(SUM(f.total_facturado_encabezado), 0) - ISNULL(SUM(c.total_compra_encabezado), 0) AS ganancia_neta
-    FROM BI.dm_tiempo t
-        JOIN BI.dm_sucursal s ON 1 = 1
-        LEFT JOIN BI.ft_factura f ON f.id_tiempo = t.id_tiempo AND f.id_sucursal = s.id_sucursal
-        LEFT JOIN BI.ft_compra c ON c.id_tiempo = t.id_tiempo AND c.id_sucursal = s.id_sucursal
-    GROUP BY t.anio, t.mes, s.direccion
-    ORDER BY t.anio, t.mes, s.direccion;
+    SELECT T.ANIO, T.MES,F.ID_SUCURSAL, 
+        ISNULL(F.TOTAL,0) - ISNULL(C.monto_total,0) GANANCIA
+    FROM LOS_GESTORES.BI_tiempo T
+    LEFT JOIN LOS_GESTORES.BI_HECHO_FACTURA F ON F.id_tiempo = T.id_tiempo
+    LEFT JOIN LOS_GESTORES.BI_HECHO_COMPRA C ON C.ID_TIEMPO = T.ID_TIEMPO AND F.id_sucursal = C.ID_SUCURSAL 
 GO
 
+
 -- 2. Factura promedio mensual 
-CREATE VIEW BI.vw_factura_promedio_provincia_cuatrimestre
+CREATE VIEW LOS_GESTORES.BI.V02_factura_promedio_provincia_cuatrimestre
 AS
-    SELECT
-        t.anio,
-        t.cuatrimestre,
-        u.provincia,
-        AVG(f.total_facturado_encabezado) AS factura_promedio_mensual
-    FROM BI.ft_factura f
-        JOIN BI.dm_tiempo t ON f.id_tiempo = t.id_tiempo
-        JOIN BI.dm_sucursal s ON f.id_sucursal = s.id_sucursal
-        JOIN BI.dm_ubicacion u ON s.id_ubicacion = u.id_ubicacion
-    GROUP BY t.anio, t.cuatrimestre, u.provincia
-    ORDER BY t.anio, t.cuatrimestre, u.provincia;
+    SELECT U.provincia
+        ,T.anio
+        ,LOS_GESTORES.BI_getCuatrimestre(T.MES)  CUATRIMESTRE
+        ,AVG(F.TOTAL) FACTURACION_PROMEDIO
+        ,100 * SUM(F.TOTAL)
+        / (SELECT SUM(F2.TOTAL)
+            FROM LOS_GESTORES.BI_HECHO_FACTURA F2
+            JOIN LOS_GESTORES.BI_tiempo T2 ON F2.id_tiempo = T2.id_tiempo
+        WHERE T2.anio = T.anio
+        AND LOS_GESTORES.BI_getCuatrimestre(T2.MES) = LOS_GESTORES.BI_getCuatrimestre(T.MES)) PORCENTAJE_DEL_PERIODO
+
+    FROM LOS_GESTORES.BI_HECHO_FACTURA F
+    JOIN LOS_GESTORES.BI_sucursal S ON F.id_sucursal = S.id_sucursal
+    JOIN LOS_GESTORES.BI_ubicacion U ON S.id_ubicacion = U.id_ubicacion
+    JOIN LOS_GESTORES.BI_tiempo T ON F.id_tiempo = T.id_tiempo
+    GROUP BY 
+    U.provincia
+        ,T.anio
+        ,LOS_GESTORES.BI_getCuatrimestre(T.MES) 
 GO
 
 -- 3. Rendimiento de modelos
