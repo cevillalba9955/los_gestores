@@ -234,22 +234,19 @@ GO
 
 
 
-CREATE TABLE BI.ft_envio (
-    id_envio DECIMAL(18,0) PRIMARY KEY, 
+CREATE TABLE LOS_GESTORES.BI_ENVIO 
+(
     id_tiempo INT,
     id_cliente INT,
-    id_pedido DECIMAL(18,0), 
-    id_sucursal BIGINT, 
-    fecha_envio_programada DATE,
-    fecha_envio_real DATE,
-    costo_envio DECIMAL(18,2), 
-    cumplimiento_en_tiempo BIT,
-    FOREIGN KEY (id_tiempo) REFERENCES BI.dm_tiempo(id_tiempo),
-    FOREIGN KEY (id_cliente) REFERENCES BI.dm_cliente(id_cliente),
-    FOREIGN KEY (id_pedido) REFERENCES LOS_GESTORES.Pedido(pedido_numero), 
-    FOREIGN KEY (id_sucursal) REFERENCES BI.dm_sucursal(id_sucursal)
+    envios_en_fecha int,
+    costo DECIMAL(10,2), 
+	total_envios int,
+    CONSTRAINT FK_BI_envio_tiempo FOREIGN KEY (id_tiempo) REFERENCES LOS_GESTORES.BI_TIEMPO(id_tiempo),
+    CONSTRAINT FK_BI_envio_cliente FOREIGN KEY (id_cliente) REFERENCES LOS_GESTORES.BI_CLIENTE(id_cliente)
 );
 GO
+
+
 
 CREATE TABLE BI.ft_pedido (
     id_detalle_pedido BIGINT PRIMARY KEY, 
@@ -323,27 +320,33 @@ INSERT INTO LOS_GESTORES.BI_HECHO_FACTURA(id_sucursal,id_tiempo,TOTAL)
 	,FORMAT(FACTURA_FECHA,'yyyyMM')
 
 
-INSERT INTO BI.ft_envio (id_tiempo, id_cliente, id_pedido, id_sucursal, fecha_envio_programada, fecha_envio_real, costo_envio, cumplimiento_en_tiempo)
+
+INSERT INTO LOS_GESTORES.BI_ENVIO (
+    id_tiempo,
+    id_cliente,
+    envios_en_fecha,
+    costo,
+    total_envios
+)
 SELECT
     t.id_tiempo,
-    c.cliente_id,
-    p.pedido_numero,
-    s.sucursal_nroSucursal,
-    e.envio_fecha_programada,
-    e.envio_fecha,
-    e.envio_importe_traslado + ISNULL(e.envio_importe_subida, 0), 
-    CASE
-        WHEN e.envio_fecha IS NOT NULL AND e.envio_fecha <= e.envio_fecha_programada THEN 1 
-        WHEN e.envio_fecha IS NOT NULL AND e.envio_fecha > e.envio_fecha_programada THEN 0 
-        ELSE NULL 
-    END
+    c2.id_cliente,
+    SUM(CASE 
+            WHEN DATEDIFF(DAY, e.envio_fecha_programada, e.envio_fecha) = 0 
+            THEN 1 ELSE 0 
+        END) AS envios_en_fecha,
+    SUM(e.envio_importe_subida + e.envio_importe_traslado) AS costo,
+    COUNT(*) AS total_envios
 FROM LOS_GESTORES.Envio e
 JOIN LOS_GESTORES.Factura f ON e.envio_factura = f.factura_numero
-JOIN LOS_GESTORES.Pedido p ON f.factura_pedido = p.pedido_numero
-JOIN LOS_GESTORES.Cliente c ON p.pedido_cliente = c.cliente_id
-JOIN LOS_GESTORES.Sucursal s ON p.pedido_sucursal = s.sucursal_nroSucursal
-JOIN BI.dm_tiempo t ON CAST(e.envio_fecha_programada AS DATE) = t.fecha;
+JOIN LOS_GESTORES.Cliente c ON f.factura_cliente = c.cliente_id
+JOIN LOS_GESTORES.BI_CLIENTE c2 ON c2.localidad_id = c.cliente_localidad
+JOIN LOS_GESTORES.BI_TIEMPO t ON t.anio = YEAR(e.envio_fecha) AND t.mes = MONTH(e.envio_fecha)
+GROUP BY
+    t.id_tiempo,
+    c2.id_cliente;
 GO
+
 
 INSERT INTO BI.ft_pedido (id_pedido, id_cliente, id_sucursal, id_tiempo, id_estado, id_turno, id_sillon, cantidad_pedida, precio_unitario_sillon, total_pedido, tiempo_fabricacion, motivo_cancelacion)
 SELECT
