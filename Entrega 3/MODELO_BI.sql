@@ -1,12 +1,4 @@
-
-
-PRINT '1. Creando el esquema BI';
 GO
-
-CREATE SCHEMA BI;
-GO
-
-PRINT 'Esquema BI creado.';
 
 /* ------- CREACION DE LAS FUNCIONES ------- */
 CREATE FUNCTION BI.getCuatrimestre (@fecha DATE)
@@ -27,14 +19,14 @@ GO
 
 
 
-CREATE FUNCTION BI.getRangoEtario (@fechaNacimiento DATE)
+CREATE FUNCTION BI.getRangoEtario (@fechaNacimiento DATE,@fechaFactura DATE)
 RETURNS NVARCHAR(6)
 AS
 BEGIN
 	DECLARE @EdadActual INT
 	DECLARE @rango NVARCHAR(6) 
 
-	SET @EdadActual = CAST(DATEDIFF(DAY, @fechaNacimiento, GETDATE()) / 365.25 AS INT)
+	SET @EdadActual = CAST(DATEDIFF(DAY, @fechaNacimiento, @fechaFactura) / 365.25 AS INT)
 
 	SET @rango =
 		CASE 
@@ -72,7 +64,7 @@ GO
 
 --------------------create dimensiones-------------------------
 
---UBICACIÓN
+--UBICACIï¿½N
 CREATE TABLE BI.dm_ubicacion (
     id_ubicacion INT IDENTITY(1,1) PRIMARY KEY,
     localidad NVARCHAR(100),
@@ -82,13 +74,13 @@ GO
 --cliente
 CREATE TABLE BI.dm_cliente (
     id_cliente INT PRIMARY KEY,
-    nombre NVARCHAR(100),
-    apellido NVARCHAR(100),
-    fecha_nacimiento DATE,
-    direccion NVARCHAR(150),
-    telefono NVARCHAR(20),
-    mail NVARCHAR(100),
-    edad INT,
+--    nombre NVARCHAR(100),
+--    apellido NVARCHAR(100),
+--    fecha_nacimiento DATE,
+--    direccion NVARCHAR(150),
+--    telefono NVARCHAR(20),
+--    mail NVARCHAR(100),
+--    edad INT,
     rango_etario NVARCHAR(6),
     id_ubicacion INT,
     CONSTRAINT FK_dm_cliente_ubicacion FOREIGN KEY (id_ubicacion) REFERENCES BI.dm_ubicacion(id_ubicacion)
@@ -161,30 +153,32 @@ INSERT INTO BI.dm_ubicacion (localidad, provincia)
 SELECT DISTINCT
     l.localidad_descripcion,
     p.provincia_descripcion
-FROM Localidad l
-JOIN Provincia p ON l.localidad_provincia = p.provincia_id;
+FROM LOS_GESTORES.Localidad l
+JOIN LOS_GESTORES.Provincia p ON l.localidad_provincia = p.provincia_id;
 GO
 
 
 --CLIENTE
 INSERT INTO BI.dm_cliente (
-    id_cliente, nombre, apellido, fecha_nacimiento, direccion,
-    telefono, mail, edad, rango_etario, id_ubicacion
+    id_cliente,
+	--nombre, apellido, fecha_nacimiento, direccion, telefono, mail, edad, 
+	rango_etario,
+	id_ubicacion
 )
 SELECT
     c.cliente_id,
-    c.cliente_nombre,
-    c.cliente_apellido,
-    c.cliente_fechanacimiento,
-    c.cliente_direccion,
-    c.cliente_telefono,
-    c.cliente_mail,
-    DATEDIFF(YEAR, c.cliente_fechanacimiento, GETDATE()),
+ --   c.cliente_nombre,
+ --   c.cliente_apellido,
+ --   c.cliente_fechanacimiento,
+ --   c.cliente_direccion,
+ --   c.cliente_telefono,
+ --   c.cliente_mail,
+ --   DATEDIFF(YEAR, c.cliente_fechanacimiento, GETDATE()),
     DB.getRangoEtario(c.cliente_fechanacimiento),
     u.id_ubicacion
-FROM Cliente c
-JOIN Localidad l ON c.cliente_localidad = l.localidad_id
-JOIN Provincia p ON l.localidad_provincia = p.provincia_id
+FROM LOS_GESTORES.Cliente c
+JOIN LOS_GESTORES.Localidad l ON c.cliente_localidad = l.localidad_id
+JOIN LOS_GESTORES.Provincia p ON l.localidad_provincia = p.provincia_id
 JOIN BI.dm_ubicacion u
     ON u.localidad = l.localidad_descripcion AND u.provincia = p.provincia_descripcion;
 GO
