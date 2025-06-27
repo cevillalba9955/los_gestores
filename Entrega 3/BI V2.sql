@@ -348,6 +348,8 @@ GROUP BY
 GO
 
 
+
+
 INSERT INTO BI.ft_pedido (id_pedido, id_cliente, id_sucursal, id_tiempo, id_estado, id_turno, id_sillon, cantidad_pedida, precio_unitario_sillon, total_pedido, tiempo_fabricacion, motivo_cancelacion)
 SELECT
     dp.detalle_pedido_numero,
@@ -553,38 +555,34 @@ ORDER BY t.anio, t.cuatrimestre, s.direccion, dm.tipo_material;
 GO
 
 -- 9. Porcentaje de cumplimiento de envíos en los tiempos programados por mes
-CREATE VIEW BI.vw_porcentaje_cumplimiento_envios_mensual AS
-SELECT
+CREATE VIEW LOS_GESTORES.VW_PORCENTAJE_CUMPLIMIENTO_MENSUAL_ENVIOS AS
+SELECT 
     t.anio,
     t.mes,
-    COUNT(e.id_envio) AS total_envios,
-    SUM(CASE WHEN e.cumplimiento_en_tiempo = 1 THEN 1 ELSE 0 END) AS envios_cumplidos_a_tiempo,
-    CAST(SUM(CASE WHEN e.cumplimiento_en_tiempo = 1 THEN 1 ELSE 0 END) AS DECIMAL(18,2)) * 100.0 / COUNT(e.id_envio) AS porcentaje_cumplimiento
-FROM BI.ft_envio e
-JOIN BI.dm_tiempo t ON e.id_tiempo = t.id_tiempo
-GROUP BY t.anio, t.mes
-ORDER BY t.anio, t.mes;
+    CAST(100.0 * SUM(e.envios_en_fecha) / SUM(e.total_envios) AS DECIMAL(5,2)) AS porcentaje_cumplimiento
+FROM LOS_GESTORES.BI_ENVIO e
+JOIN LOS_GESTORES.BI_TIEMPO t ON e.id_tiempo = t.id_tiempo
+GROUP BY 
+    t.anio,
+    t.mes;
 GO
 
--- 10. Localidades que pagan mayor costo de envío
-CREATE VIEW BI.vw_top_3_localidades_mayor_costo_envio AS
-WITH LocalidadCostoEnvio AS (
-    SELECT
-        u.localidad,
-        AVG(e.costo_envio) AS promedio_costo_envio,
-        ROW_NUMBER() OVER (ORDER BY AVG(e.costo_envio) DESC) AS rn
-    FROM BI.ft_envio e
-    JOIN BI.dm_cliente c ON e.id_cliente = c.id_cliente
-    JOIN BI.dm_ubicacion u ON c.id_ubicacion = u.id_ubicacion
-    GROUP BY u.localidad
-)
-SELECT
-    localidad,
-    promedio_costo_envio
-FROM LocalidadCostoEnvio
-WHERE rn <= 3
-ORDER BY promedio_costo_envio DESC;
+
+-- 10. Localidades que pagan mayor costo de envío 
+CREATE VIEW LOS_GESTORES.VW_LOCALIDADES_MAYOR_COSTO_ENVIO AS
+SELECT TOP 3
+    cl.localidad_id,
+    cl.localidad_descripcion,
+    CAST(SUM(e.costo) / SUM(e.total_envios) AS DECIMAL(10,2)) AS promedio_envio
+FROM LOS_GESTORES.BI_ENVIO e
+JOIN LOS_GESTORES.BI_CLIENTE cl ON e.id_cliente = cl.id_cliente
+GROUP BY 
+    cl.localidad_id,
+    cl.localidad_descripcion
+ORDER BY 
+    promedio_envio DESC;
 GO
+
 
 PRINT 'Vistas BI creadas.';
 GO
