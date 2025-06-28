@@ -266,8 +266,8 @@ END
 GO
 
 
-
-CREATE FUNCTION LOS_GESTORES.BI.getModeloTopVentas (@anio INT, @CUATRIMESTRE INT, @RANGO NVARCHAR(6), @LOCALIDAD INT, @POSICION INT)
+/*
+CREATE FUNCTION LOS_GESTORES.BI_getModeloTopVentas (@anio INT, @CUATRIMESTRE INT, @RANGO NVARCHAR(6), @LOCALIDAD INT, @POSICION INT)
 RETURNS BIGINT
 AS
 BEGIN
@@ -297,6 +297,7 @@ BEGIN
     RETURN @MODELO
 END
 GO
+*/
 
 PRINT 'Funciones BI creadas.';
 GO
@@ -560,6 +561,7 @@ AS
 GO
 
 -- 3. Rendimiento de modelos
+/*
 CREATE VIEW BI.vw_top_3_modelos_por_cuatrimestre_localidad_rango_etario
 AS
     WITH
@@ -595,7 +597,7 @@ AS
     WHERE rn <= 3
     ORDER BY anio, cuatrimestre, localidad, rango_etario, total_ventas_modelo DESC;
 GO
-
+*/
 -- 4. Volumen de pedidos
 
 
